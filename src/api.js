@@ -5,8 +5,9 @@
 import axios from 'axios';
 import { io } from 'socket.io-client';
 
-const API_URL = 'http://localhost:3001/api';
-const WS_URL = 'http://localhost:3001';
+const HOST = window.location.hostname;
+const API_URL = import.meta.env.VITE_API_URL || `http://${HOST}:3001/api`;
+const WS_URL = import.meta.env.VITE_WS_URL || `http://${HOST}:3001`;
 
 // ─── AXIOS INSTANCE ──────────────────────────────────────────
 
@@ -120,4 +121,10 @@ export const roomsAPI = {
   leave: (id) => api.post(`/rooms/${id}/leave`),
   start: (id) => api.post(`/rooms/${id}/start`),
   end: (id) => api.post(`/rooms/${id}/end`),
+};
+
+export const vaultAPI = {
+  list: () => api.get('/vault/documents'),
+  upload: (data) => api.post('/vault/documents', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  delete: (id) => api.delete(`/vault/documents/${id}`),
 };

@@ -13,6 +13,7 @@ const ChatList = lazy(() => import('./features/chat/ChatList'));
 const Profile = lazy(() => import('./features/profile/Profile'));
 const LoginScreen = lazy(() => import('./features/auth/LoginScreen'));
 const AudioRooms = lazy(() => import('./features/rooms/AudioRooms'));
+const VaultScreen = lazy(() => import('./features/vault/VaultScreen'));
 
 export default function App() {
   const { checkAuth, isAuthenticated, isLoading } = useAuthStore();
@@ -48,6 +49,7 @@ export default function App() {
           <Route path="/chat" element={<ChatList />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/rooms" element={<AudioRooms />} />
+          <Route path="/vault" element={<VaultScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

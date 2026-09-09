@@ -205,8 +205,8 @@ export const authService = {
       throw new UnauthorizedError('Sessão inválida. Faça login novamente.');
     }
 
-    // Rotation: deletar o token usado
-    await prisma.refreshToken.delete({ where: { id: storedToken.id } });
+    // Rotation: deletar o token usado (usamos deleteMany para não quebrar em requests concorrentes)
+    await prisma.refreshToken.deleteMany({ where: { id: storedToken.id } });
 
     // Gerar novo par
     const accessToken = generateAccessToken(payload.sub);

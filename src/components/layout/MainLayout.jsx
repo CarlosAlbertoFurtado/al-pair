@@ -25,8 +25,13 @@ function NavItem({ to, icon: Icon, label, badge }) {
   );
 }
 
+import CreatePostModal from '../features/create/CreatePostModal';
+import CreateRoomModal from '../features/create/CreateRoomModal';
+import { PenSquare, Mic } from 'lucide-react';
+
 export default function MainLayout() {
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateMenu, setShowCreateMenu] = useState(false);
+  const [activeModal, setActiveModal] = useState(null); // 'post' | 'room' | null
 
   return (
     <div className="w-full max-w-[430px] mx-auto h-screen bg-white relative overflow-hidden flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.05)]">
@@ -57,7 +62,7 @@ export default function MainLayout() {
         <NavItem to="/rooms" icon={Headphones} label="Salas" badge="Ao Vivo" />
         
         <button 
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => setShowCreateMenu(true)}
           className="flex items-center justify-center w-14 h-14 bg-gradient-to-tr from-rose-500 to-purple-600 text-white rounded-full hover:scale-105 transition-transform active:scale-95 -mt-8 shadow-lg shadow-rose-300"
         >
           <Plus size={28} />
@@ -67,19 +72,61 @@ export default function MainLayout() {
         <NavItem to="/profile" icon={User} label="Perfil" />
       </nav>
 
-      {/* Create Modal placeholder – will be expanded later */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-end justify-center" onClick={() => setShowCreateModal(false)}>
-          <div className="bg-white w-full max-w-[430px] rounded-t-3xl p-6 pb-10 shadow-2xl" onClick={e => e.stopPropagation()}>
+      {/* Create Selection Menu */}
+      {showCreateMenu && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end justify-center animate-in fade-in duration-200" onClick={() => setShowCreateMenu(false)}>
+          <div className="bg-white w-full max-w-[430px] rounded-t-3xl p-6 pb-10 shadow-2xl animate-in slide-in-from-bottom duration-300" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-slate-900">Criar Novo</h2>
-              <button onClick={() => setShowCreateModal(false)} className="p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200">
+              <h2 className="text-xl font-bold text-slate-900">O que deseja criar?</h2>
+              <button onClick={() => setShowCreateMenu(false)} className="p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200">
                 <span className="text-lg">✕</span>
               </button>
             </div>
-            <p className="text-slate-500 text-center text-sm">Em breve: publicação, story, sala de áudio...</p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <button 
+                onClick={() => { setShowCreateMenu(false); setActiveModal('post'); }}
+                className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-slate-50 border border-slate-100 hover:border-rose-300 hover:bg-rose-50 transition-all group"
+              >
+                <div className="w-14 h-14 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <PenSquare size={28} />
+                </div>
+                <span className="font-bold text-slate-700">Publicação</span>
+              </button>
+              
+              <button 
+                onClick={() => { setShowCreateMenu(false); setActiveModal('room'); }}
+                className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-slate-50 border border-slate-100 hover:border-indigo-300 hover:bg-indigo-50 transition-all group"
+              >
+                <div className="w-14 h-14 rounded-full bg-indigo-100 text-indigo-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <Mic size={28} />
+                </div>
+                <span className="font-bold text-slate-700">Sala de Áudio</span>
+              </button>
+            </div>
           </div>
         </div>
+      )}
+
+      {/* Actual Modals */}
+      {activeModal === 'post' && (
+        <CreatePostModal 
+          onClose={() => setActiveModal(null)} 
+          onSuccess={() => {
+            setActiveModal(null);
+            // In a real app we'd refresh the feed here or use global state
+            window.location.reload(); 
+          }} 
+        />
+      )}
+      {activeModal === 'room' && (
+        <CreateRoomModal 
+          onClose={() => setActiveModal(null)} 
+          onSuccess={() => {
+            setActiveModal(null);
+            window.location.href = '/rooms';
+          }} 
+        />
       )}
     </div>
   );

@@ -21,20 +21,22 @@ export function errorHandler(
     stack: env.isDev ? err.stack : undefined,
   });
 
-  // Se for um AppError (erro esperado e controlado)
-  if (err instanceof ValidationError) {
-    res.status(err.statusCode).json({
+  // Se for um AppError (erro esperado e controlado) - Duck typing evita problemas de instanceof
+  if ('statusCode' in err && 'errors' in err) {
+    const valErr = err as ValidationError;
+    res.status(valErr.statusCode).json({
       success: false,
-      message: err.message,
-      errors: err.errors,
+      message: valErr.message,
+      errors: valErr.errors,
     });
     return;
   }
 
-  if (err instanceof AppError) {
-    res.status(err.statusCode).json({
+  if ('statusCode' in err) {
+    const appErr = err as AppError;
+    res.status(appErr.statusCode).json({
       success: false,
-      message: err.message,
+      message: appErr.message,
     });
     return;
   }

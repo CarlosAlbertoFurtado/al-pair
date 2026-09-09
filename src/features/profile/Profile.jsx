@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Settings, Grid, Award, MapPin, Calendar, LogIn, Star, Globe, Briefcase, Users, ToggleRight, ToggleLeft, ChevronRight, ShieldAlert, FileText, CheckSquare, Building } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { api } from '../../api';
@@ -8,6 +9,7 @@ export default function Profile() {
   const { user, userRole, logout } = useAuthStore();
   const [stats, setStats] = useState({ postsCount: 0, followersCount: 0, followingCount: 0 });
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user?.id) {
@@ -41,7 +43,7 @@ export default function Profile() {
     {
       title: 'Ferramentas',
       items: [
-        { icon: FileText, label: 'Cofre Digital', desc: 'Documentos seguros' },
+        { icon: FileText, label: 'Cofre Digital', desc: 'Documentos seguros', onClick: () => navigate('/vault') },
         { icon: CheckSquare, label: 'Minha Jornada', desc: 'Checklist de passos' },
         { icon: Building, label: 'Agências', desc: 'Avaliações reais' },
         { icon: ShieldAlert, label: 'SOS & Emergências', desc: 'Ajuda rápida' },
@@ -97,7 +99,7 @@ export default function Profile() {
           <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">{section.title}</h3>
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             {section.items.map((item, ii) => (
-              <button key={ii} className="flex items-center gap-3 w-full px-4 py-3.5 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0">
+              <button key={ii} onClick={item.onClick} className="flex items-center gap-3 w-full px-4 py-3.5 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0">
                 <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
                   <item.icon size={18} />
                 </div>
