@@ -1,0 +1,64 @@
+/* src/styles/theme.css */
+
+:root {
+  /* Core palette – HSL for easy theming */
+  --color-primary-h: 260;   /* purple */
+  --color-primary-s: 70%;
+  --color-primary-l: 55%;
+
+  --color-secondary-h: 340; /* rose */
+  --color-secondary-s: 80%;
+  --color-secondary-l: 55%;
+
+  --color-background: hsl(210, 20%, 98%); /* very light gray */
+  --color-surface: hsl(0, 0%, 100%);
+  --color-text: hsl(210, 10%, 15%);
+  --color-muted: hsl(210, 10%, 45%);
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: hsl(210, 15%, 10%);
+    --color-surface: hsl(210, 15%, 15%);
+    --color-text: hsl(0, 0%, 90%);
+    --color-muted: hsl(210, 10%, 55%);
+  }
+}
+
+/* Utility classes */
+.font-sans { font-family: 'Inter', sans-serif; }
+.bg-primary { background-color: hsl(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l)); }
+.bg-secondary { background-color: hsl(var(--color-secondary-h), var(--color-secondary-s), var(--color-secondary-l)); }
+.text-primary { color: hsl(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l)); }
+.text-secondary { color: hsl(var(--color-secondary-h), var(--color-secondary-s), var(--color-secondary-l)); }
+
+/* Glassmorphism */
+.glass {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Micro‑animations */
+.transition {
+  transition: all 0.2s ease-in-out;
+}
+.hover\:scale-105:hover { transform: scale(1.05); }
+.hover\:scale-95:hover { transform: scale(0.95); }
+
+/* Button utilities */
+.btn-primary {
+  background-color: hsl(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l));
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: transform 0.2s;
+}
+.btn-primary:hover { transform: scale(1.05); }
+
+/* Scrollbar hidden */
+::-webkit-scrollbar { width: 0; height: 0; }

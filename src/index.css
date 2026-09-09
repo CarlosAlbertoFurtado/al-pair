@@ -1,0 +1,31 @@
+@import "tailwindcss";
+@import './styles/theme.css';
+
+/* Base layout */
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+#root {
+  width: 100%;
+  max-width: 430px;
+  height: 100vh;
+  background: var(--color-surface);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 40px rgba(0,0,0,0.05);
+}
+
+::-webkit-scrollbar { width: 0; height: 0; }

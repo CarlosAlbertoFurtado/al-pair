@@ -1,0 +1,478 @@
+// ══════════════════════════════════════════════════════════════
+// AuPairConnect - Prisma Schema (SQLite - Desenvolvimento)
+// ══════════════════════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── USUÁRIOS ──────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  
+  // Perfil público
+  displayName   String
+  bio           String?
+  avatarUrl     String?
+  coverUrl      String?
+  role          String    @default("CANDIDATE") // CANDIDATE, ALUMNI, MENTOR
+  
+  // Geolocalização
+  latitude      Float?
+  longitude     Float?
+  city          String?
+  country       String?
+  
+  // Gamificação
+  xp            Int       @default(0)
+  level         Int       @default(1)
+  
+  // Mentoria/Consultoria
+  isMentorActive    Boolean   @default(false)
+  hourlyRate        Float?    
+  specialties       String?   // JSON string or comma-separated
+  totalEarnings     Float     @default(0)
+  
+  // Metadados
+  isOnline      Boolean   @default(false)
+  lastSeenAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  refreshTokens RefreshToken[]
+  posts             Post[]
+  comments          Comment[]
+  likes             Like[]
+  sentMessages      Message[]         @relation("SentMessages")
+  conversationUsers ConversationUser[]
+  agencyReviews     AgencyReview[]
+  vaultItems        VaultItem[]
+  badges            UserBadge[]
+  roomParticipants  RoomParticipant[]
+  createdRooms      Room[]
+  followers         Follow[]          @relation("Following")
+  following         Follow[]          @relation("Followers")
+  notifications     Notification[]
+  bookmarks         Bookmark[]
+  journeyProgress   UserJourneyItem[]
+  emergencyContacts EmergencyContact[]
+  blocksInitiated   UserBlock[]       @relation("BlocksInitiated")
+  blocksReceived    UserBlock[]       @relation("BlocksReceived")
+  reportsFiled      Report[]          @relation("ReportsFiled")
+  passwordResets    PasswordResetToken[]
+  
+  @@index([latitude, longitude])
+  @@index([displayName])
+  @@index([email])
+  @@index([role])
+  @@index([isOnline])
+  @@index([city, country])
+  @@map("users")
+}
+
+// ─── AUTENTICAÇÃO ──────────────────────────────────────────
+
+model RefreshToken {
+  id          String   @id @default(cuid())
+  token       String   @unique
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+// ─── SOCIAL: FOLLOWS ───────────────────────────────────────
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  followingId String
+  follower    User     @relation("Followers", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+// ─── POSTS (TIMELINE + REMATCH) ────────────────────────────
+
+model Post {
+  id              String          @id @default(cuid())
+  authorId        String
+  author          User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  content         String
+  imageUrl        String?
+  type            String          @default("FEED") // FEED, REMATCH
+  
+  rematchUrgency  String?         // URGENT, TRANSFER
+  rematchCity     String?
+  rematchState    String?
+  rematchCountry  String?
+  
+  likesCount      Int             @default(0)
+  commentsCount   Int             @default(0)
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  comments        Comment[]
+  likes           Like[]
+  bookmarks       Bookmark[]
+  
+  @@index([authorId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("posts")
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([userId])
+  @@map("bookmarks")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  data      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model JourneyTask {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  category    String
+  sortOrder   Int      @default(0)
+  xpReward    Int      @default(25)
+  createdAt   DateTime @default(now())
+
+  progress    UserJourneyItem[]
+
+  @@map("journey_tasks")
+}
+
+model UserJourneyItem {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId      String
+  task        JourneyTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  completed   Boolean     @default(false)
+  completedAt DateTime?
+  createdAt   DateTime    @default(now())
+
+  @@unique([userId, taskId])
+  @@index([userId])
+  @@map("user_journey_items")
+}
+
+model EmergencyContact {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  phone     String
+  relation  String?
+  country   String?
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("emergency_contacts")
+}
+
+model UserBlock {
+  id        String   @id @default(cuid())
+  blockerId String
+  blockedId String
+  blocker   User     @relation("BlocksInitiated", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   User     @relation("BlocksReceived", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@map("user_blocks")
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  reporterId  String
+  reporter    User     @relation("ReportsFiled", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetType  String
+  targetId    String
+  reason      String
+  description String?
+  status      String   @default("OPEN")
+  createdAt   DateTime @default(now())
+
+  @@index([reporterId])
+  @@index([status])
+  @@map("reports")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  
+  @@index([postId])
+  @@index([authorId])
+  @@map("comments")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+  @@map("likes")
+}
+
+// ─── CHAT EM TEMPO REAL ────────────────────────────────────
+
+model Conversation {
+  id            String             @id @default(cuid())
+  isGroup       Boolean            @default(false)
+  groupName     String?
+  groupAvatarUrl String?
+  
+  lastMessageAt DateTime?
+  lastMessagePreview String?
+  
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  
+  participants  ConversationUser[]
+  messages      Message[]
+  
+  @@index([lastMessageAt])
+  @@map("conversations")
+}
+
+model ConversationUser {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  unreadCount    Int          @default(0)
+  lastReadAt     DateTime?
+  isTyping       Boolean      @default(false)
+  joinedAt       DateTime     @default(now())
+  
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@index([conversationId])
+  @@map("conversation_users")
+}
+
+model Message {
+  id             String        @id @default(cuid())
+  conversationId String
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User          @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  
+  content        String
+  imageUrl       String?
+  audioUrl       String?
+  status         String        @default("SENT") // SENT, DELIVERED, READ
+  
+  createdAt      DateTime      @default(now())
+  
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@map("messages")
+}
+
+// ─── AGÊNCIAS E AVALIAÇÕES ─────────────────────────────────
+
+model Agency {
+  id          String         @id @default(cuid())
+  name        String         @unique
+  description String?
+  logoUrl     String?
+  website     String?
+  country     String?
+  
+  averageRating Float        @default(0)
+  reviewsCount  Int          @default(0)
+  
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  
+  reviews     AgencyReview[]
+  
+  @@index([averageRating])
+  @@map("agencies")
+}
+
+model AgencyReview {
+  id        String   @id @default(cuid())
+  agencyId  String
+  agency    Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  rating    Int      
+  title     String
+  content   String
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([agencyId, authorId]) 
+  @@index([agencyId])
+  @@index([authorId])
+  @@map("agency_reviews")
+}
+
+// ─── COFRE DIGITAL ─────────────────────────────────────────
+
+model VaultItem {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type        String        // PASSPORT, VISA, etc
+  label       String        
+  fileUrl     String        
+  fileSizeKb  Int
+  mimeType    String
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  @@index([userId])
+  @@map("vault_items")
+}
+
+// ─── SALAS DE ÁUDIO ────────────────────────────────────────
+
+model Room {
+  id          String           @id @default(cuid())
+  title       String
+  description String?
+  hostId      String
+  host        User             @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  
+  status      String           @default("SCHEDULED") // SCHEDULED, LIVE, ENDED
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  endedAt     DateTime?
+  
+  participantCount Int         @default(0)
+  maxParticipants  Int         @default(100)
+  
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  
+  participants RoomParticipant[]
+  
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([hostId])
+  @@map("rooms")
+}
+
+model RoomParticipant {
+  id       String   @id @default(cuid())
+  roomId   String
+  room     Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  isSpeaker Boolean @default(false)
+  joinedAt  DateTime @default(now())
+  
+  @@unique([roomId, userId])
+  @@index([roomId])
+  @@index([userId])
+  @@map("room_participants")
+}
+
+// ─── GAMIFICAÇÃO ───────────────────────────────────────────
+
+model Badge {
+  id          String      @id @default(cuid())
+  slug        String      @unique  
+  name        String               
+  description String
+  iconUrl     String?
+  xpReward    Int         @default(50)
+  
+  users       UserBadge[]
+  
+  @@map("badges")
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId   String
+  badge     Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  earnedAt  DateTime @default(now())
+  
+  @@unique([userId, badgeId])
+  @@index([userId])
+  @@map("user_badges")
+}
