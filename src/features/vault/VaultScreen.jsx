@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FileText, UploadCloud, Trash2, ShieldCheck, Download, Plus } from 'lucide-react';
-import { vaultAPI } from '../../api';
+import { vaultAPI, BASE_URL } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
-
-const API_BASE = 'http://localhost:3001';
 
 export default function VaultScreen() {
   const [documents, setDocuments] = useState([]);
@@ -131,7 +129,7 @@ export default function VaultScreen() {
               </div>
               <div className="flex gap-2">
                 <a 
-                  href={`${API_BASE}${doc.fileUrl}`} 
+                  href={`${BASE_URL}${doc.fileUrl}`} 
                   target="_blank" 
                   rel="noreferrer"
                   className="p-2 text-slate-400 hover:text-teal-500 bg-slate-50 rounded-lg"

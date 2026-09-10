@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { authAPI } from '../api';
+import { authAPI, disconnectSocket } from '../api';
 
 export const useAuthStore = create((set, get) => ({
   isAuthenticated: false,
@@ -58,6 +58,7 @@ export const useAuthStore = create((set, get) => ({
     } finally {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
+      disconnectSocket();
       set({ isAuthenticated: false, user: null, userRole: null });
     }
   },

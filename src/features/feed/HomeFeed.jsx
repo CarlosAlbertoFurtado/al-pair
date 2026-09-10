@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Heart, MessageSquare, Share2, MoreHorizontal, Bookmark } from 'lucide-react';
-import { postsAPI } from '../../api';
+import { postsAPI, BASE_URL } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { useAuthStore } from '../../store/useAuthStore';
-
-const API_BASE = 'http://localhost:3001';
 
 function PostCard({ post }) {
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
@@ -22,7 +20,7 @@ function PostCard({ post }) {
   };
 
   const imageUrl = post.imageUrl
-    ? (post.imageUrl.startsWith('http') ? post.imageUrl : `${API_BASE}${post.imageUrl}`)
+    ? (post.imageUrl.startsWith('http') ? post.imageUrl : `${BASE_URL}${post.imageUrl}`)
     : null;
 
   return (
