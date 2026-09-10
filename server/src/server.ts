@@ -153,7 +153,7 @@ async function bootstrap() {
   await connectDatabase();
   await initializeChatGateway(httpServer);
 
-  httpServer.listen(env.PORT, () => {
+  httpServer.listen(env.PORT, '0.0.0.0', () => {
     console.log('');
     console.log('══════════════════════════════════════════════');
     console.log(`  🚀 AuPairConnect API v1.0.0`);
