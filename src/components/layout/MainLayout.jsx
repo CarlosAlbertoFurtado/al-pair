@@ -25,8 +25,8 @@ function NavItem({ to, icon: Icon, label, badge }) {
   );
 }
 
-import CreatePostModal from '../features/create/CreatePostModal';
-import CreateRoomModal from '../features/create/CreateRoomModal';
+import CreatePostModal from '../../features/create/CreatePostModal';
+import CreateRoomModal from '../../features/create/CreateRoomModal';
 import { PenSquare, Mic } from 'lucide-react';
 
 export default function MainLayout() {
