@@ -6,7 +6,8 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 
 const HOST = window.location.hostname;
-export const BASE_URL = import.meta.env.VITE_WS_URL || `http://${HOST}:3001`;
+const RENDER_BACKEND = 'https://aupairconnect-backend.onrender.com';
+export const BASE_URL = import.meta.env.VITE_WS_URL || (HOST.includes('localhost') ? `http://${HOST}:3001` : RENDER_BACKEND);
 const API_URL = import.meta.env.VITE_API_URL || `${BASE_URL}/api`;
 const WS_URL = BASE_URL;
 
