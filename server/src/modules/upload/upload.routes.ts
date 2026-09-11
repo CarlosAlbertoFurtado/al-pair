@@ -8,18 +8,18 @@
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
 import sharp from 'sharp';
 import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary';
 import { authenticate } from '../../middleware/authenticate.js';
 import { AppError } from '../../shared/errors/AppError.js';
+import { env } from '../../config/env.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const router = Router();
 
-const allowedImageMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+const allowedImageMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+const uploadRoot = path.resolve(process.cwd(), env.UPLOAD_DIR);
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024 },
@@ -28,7 +28,7 @@ const upload = multer({
       cb(null, true);
       return;
     }
-    cb(new AppError('Use uma imagem JPEG, PNG ou WEBP.', 415));
+    cb(new AppError('Use uma foto JPEG, PNG, WEBP ou HEIC.', 415));
   },
 });
 
@@ -48,32 +48,42 @@ function assertFile(file: Express.Multer.File | undefined, maxSizeMb: number) {
 }
 
 async function normalizeImage(buffer: Buffer, options: ImageUploadOptions) {
-  const image = sharp(buffer, { failOn: 'error' });
-  const metadata = await image.metadata();
+  try {
+    const image = sharp(buffer, { failOn: 'error' });
+    const metadata = await image.metadata();
 
-  if (!metadata.width || !metadata.height) {
-    throw new AppError('Arquivo de imagem inválido.', 422);
+    if (!metadata.width || !metadata.height) {
+      throw new AppError('Arquivo de imagem inválido.', 422);
+    }
+
+    return image
+      .rotate()
+      .resize(options.width, options.height, {
+        fit: options.height ? 'cover' : 'inside',
+        withoutEnlargement: true,
+      })
+      .jpeg({ quality: 85, mozjpeg: true })
+      .toBuffer();
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError('Não foi possível processar esta foto. Tente enviar em JPEG, PNG ou WEBP.', 422);
   }
-
-  return image
-    .rotate()
-    .resize(options.width, options.height, {
-      fit: options.height ? 'cover' : 'inside',
-      withoutEnlargement: true,
-    })
-    .jpeg({ quality: 85, mozjpeg: true })
-    .toBuffer();
 }
 
 function uploadToCloudinary(buffer: Buffer, options: ImageUploadOptions) {
   return new Promise<UploadApiResponse>((resolve, reject) => {
+    const uploadOptions: Record<string, unknown> = {
+      folder: options.folder,
+      resource_type: 'image',
+      format: 'jpg',
+    };
+
+    if (options.requireFace) {
+      uploadOptions.faces = true;
+    }
+
     const stream = cloudinary.uploader.upload_stream(
-      {
-        folder: options.folder,
-        resource_type: 'image',
-        format: 'jpg',
-        faces: options.requireFace,
-      },
+      uploadOptions,
       (error, result) => {
         if (error || !result) {
           reject(error || new Error('Cloudinary não retornou resultado.'));
@@ -86,8 +96,28 @@ function uploadToCloudinary(buffer: Buffer, options: ImageUploadOptions) {
   });
 }
 
+async function persistImage(buffer: Buffer, options: ImageUploadOptions) {
+  if (!process.env.CLOUDINARY_URL) {
+    return saveLocally(buffer, options.folder);
+  }
+
+  try {
+    const result = await uploadToCloudinary(buffer, options);
+    const faces = Array.isArray(result.faces) ? result.faces : [];
+
+    if (options.requireFace && faces.length === 0) {
+      throw new AppError('A foto de perfil precisa mostrar uma pessoa com o rosto visível.', 422);
+    }
+
+    return result.secure_url;
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    throw new AppError('Não foi possível armazenar a imagem agora. Verifique o Cloudinary e tente novamente.', 502);
+  }
+}
+
 async function saveLocally(buffer: Buffer, folder: string) {
-  const uploadDir = path.join(__dirname, '../../../../uploads', folder);
+  const uploadDir = path.join(uploadRoot, folder);
   await fs.promises.mkdir(uploadDir, { recursive: true });
 
   const filename = `${Date.now()}-${randomUUID()}.jpg`;
@@ -100,22 +130,10 @@ async function handleImageUpload(req: Request, res: Response, options: ImageUplo
   assertFile(file, options.maxSizeMb);
 
   const normalized = await normalizeImage(file!.buffer, options);
-  let url = '';
-  let faceCheck = 'unavailable';
-
-  if (process.env.CLOUDINARY_URL) {
-    const result = await uploadToCloudinary(normalized, options);
-    const faces = Array.isArray(result.faces) ? result.faces : [];
-    faceCheck = options.requireFace ? 'checked' : 'not_required';
-
-    if (options.requireFace && faces.length === 0) {
-      throw new AppError('A foto de perfil precisa mostrar uma pessoa com o rosto visível.', 422);
-    }
-
-    url = result.secure_url;
-  } else {
-    url = await saveLocally(normalized, options.folder);
-  }
+  const url = await persistImage(normalized, options);
+  const faceCheck = process.env.CLOUDINARY_URL
+    ? (options.requireFace ? 'checked' : 'not_required')
+    : 'unavailable';
 
   res.status(201).json({
     success: true,

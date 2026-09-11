@@ -17,10 +17,10 @@ import client from 'prom-client';
 // Collect default metrics (CPU, memory, event loop, etc.)
 client.collectDefaultMetrics();
 import { initializeChatGateway } from './modules/chat/gateway/chat.gateway.js';
+import { fileURLToPath } from 'url';
 
 // ─── Importar Rotas ────────────────────────────────────────
 
-import { fileURLToPath } from 'url';
 import path from 'path';
 import authRoutes from './modules/auth/routes/auth.routes.js';
 import usersRoutes from './modules/users/routes/users.routes.js';
@@ -43,9 +43,7 @@ const app = express();
 const httpServer = createServer(app);
 
 // Servir arquivos de upload como estáticos
-const __filename = fileURLToPath(import.meta.url);
-const __dirname_root = path.resolve(path.dirname(__filename), '../..');
-app.use('/uploads', express.static(path.join(__dirname_root, 'uploads')));
+app.use('/uploads', express.static(path.resolve(process.cwd(), env.UPLOAD_DIR)));
 
 // ─── Middleware de Segurança (ordem importa!) ──────────────
 

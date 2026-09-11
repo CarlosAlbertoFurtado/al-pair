@@ -1,8 +1,8 @@
-const PHOTO_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const PHOTO_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
 
 export function validatePhotoFile(file, { maxSizeMb }) {
   if (!file) return 'Selecione uma foto.';
-  if (!PHOTO_MIME_TYPES.includes(file.type)) return 'Use uma foto JPEG, PNG ou WEBP.';
+  if (!PHOTO_MIME_TYPES.includes(file.type)) return 'Use uma foto JPEG, PNG, WEBP ou HEIC.';
   if (file.size > maxSizeMb * 1024 * 1024) return `A foto deve ter no máximo ${maxSizeMb}MB.`;
   return '';
 }
@@ -27,8 +27,12 @@ function loadImage(file) {
 export async function hasVisibleFace(file) {
   if (!('FaceDetector' in window)) return null;
 
-  const detector = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 3 });
-  const image = await loadImage(file);
-  const faces = await detector.detect(image);
-  return faces.length > 0;
+  try {
+    const detector = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 3 });
+    const image = await loadImage(file);
+    const faces = await detector.detect(image);
+    return faces.length > 0;
+  } catch {
+    return null;
+  }
 }
