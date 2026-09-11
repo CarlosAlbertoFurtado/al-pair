@@ -130,3 +130,25 @@ export const vaultAPI = {
   upload: (data) => api.post('/vault/documents', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
   delete: (id) => api.delete(`/vault/documents/${id}`),
 };
+
+export const searchAPI = {
+  query: (q) => api.get('/search', { params: { q } }),
+};
+
+export const notificationsAPI = {
+  list: () => api.get('/notifications'),
+  readAll: () => api.post('/notifications/read-all'),
+  readOne: (id) => api.patch(`/notifications/${id}/read`),
+};
+
+export const journeyAPI = {
+  list: () => api.get('/journey'),
+  toggle: (taskId) => api.post(`/journey/${taskId}/toggle`),
+};
+
+export const emergencyAPI = {
+  getResources: () => api.get('/emergency/resources'),
+  getContacts: () => api.get('/emergency/contacts'),
+  addContact: (data) => api.post('/emergency/contacts', data),
+  removeContact: (id) => api.delete(`/emergency/contacts/${id}`),
+};

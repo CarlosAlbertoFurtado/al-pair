@@ -44,9 +44,9 @@ export default function Profile() {
       title: 'Ferramentas',
       items: [
         { icon: FileText, label: 'Cofre Digital', desc: 'Documentos seguros', onClick: () => navigate('/vault') },
-        { icon: CheckSquare, label: 'Minha Jornada', desc: 'Checklist de passos' },
+        { icon: CheckSquare, label: 'Minha Jornada', desc: 'Checklist de passos', onClick: () => navigate('/journey') },
         { icon: Building, label: 'Agências', desc: 'Avaliações reais' },
-        { icon: ShieldAlert, label: 'SOS & Emergências', desc: 'Ajuda rápida' },
+        { icon: ShieldAlert, label: 'SOS & Emergências', desc: 'Ajuda rápida', onClick: () => navigate('/emergency') },
       ]
     },
     {

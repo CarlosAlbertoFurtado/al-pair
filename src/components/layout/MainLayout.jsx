@@ -1,6 +1,7 @@
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { Home, Headphones, Plus, MessageCircle, User, Search, Bell } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { notificationsAPI } from '../../api';
 
 function NavItem({ to, icon: Icon, label, badge }) {
   return (
@@ -32,6 +33,14 @@ import { PenSquare, Mic } from 'lucide-react';
 export default function MainLayout() {
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [activeModal, setActiveModal] = useState(null); // 'post' | 'room' | null
+  const [unreadCount, setUnreadCount] = useState(0);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    notificationsAPI.list()
+      .then(res => setUnreadCount(res.data.data.unreadCount || 0))
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="w-full max-w-[430px] mx-auto h-screen bg-white relative overflow-hidden flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.05)]">
@@ -41,12 +50,14 @@ export default function MainLayout() {
           AuPairConnect
         </h1>
         <div className="flex gap-3">
-          <button className="p-2 -mr-2 rounded-full hover:bg-rose-50 transition-colors relative text-slate-700">
+          <button onClick={() => navigate('/search')} className="p-2 -mr-2 rounded-full hover:bg-rose-50 transition-colors relative text-slate-700">
             <Search size={22} />
           </button>
-          <button className="p-2 -mr-2 rounded-full hover:bg-rose-50 transition-colors relative text-slate-700">
+          <button onClick={() => navigate('/notifications')} className="p-2 -mr-2 rounded-full hover:bg-rose-50 transition-colors relative text-slate-700">
             <Bell size={22} />
-            <span className="absolute top-1.5 right-1.5 w-3 h-3 bg-rose-500 border-2 border-white rounded-full animate-pulse"></span>
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-3 h-3 bg-rose-500 border-2 border-white rounded-full animate-pulse"></span>
+            )}
           </button>
         </div>
       </header>

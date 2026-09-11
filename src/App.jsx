@@ -14,6 +14,10 @@ const Profile = lazy(() => import('./features/profile/Profile'));
 const LoginScreen = lazy(() => import('./features/auth/LoginScreen'));
 const AudioRooms = lazy(() => import('./features/rooms/AudioRooms'));
 const VaultScreen = lazy(() => import('./features/vault/VaultScreen'));
+const SearchScreen = lazy(() => import('./features/search/SearchScreen'));
+const NotificationsScreen = lazy(() => import('./features/notifications/NotificationsScreen'));
+const JourneyScreen = lazy(() => import('./features/journey/JourneyScreen'));
+const EmergencyScreen = lazy(() => import('./features/emergency/EmergencyScreen'));
 
 export default function App() {
   const { checkAuth, isAuthenticated, isLoading } = useAuthStore();
@@ -50,6 +54,10 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/rooms" element={<AudioRooms />} />
           <Route path="/vault" element={<VaultScreen />} />
+          <Route path="/search" element={<SearchScreen />} />
+          <Route path="/notifications" element={<NotificationsScreen />} />
+          <Route path="/journey" element={<JourneyScreen />} />
+          <Route path="/emergency" element={<EmergencyScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
