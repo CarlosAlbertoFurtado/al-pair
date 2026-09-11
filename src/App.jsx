@@ -12,6 +12,8 @@ const HomeFeed = lazy(() => import('./features/feed/HomeFeed'));
 const ChatList = lazy(() => import('./features/chat/ChatList'));
 const Profile = lazy(() => import('./features/profile/Profile'));
 const LoginScreen = lazy(() => import('./features/auth/LoginScreen'));
+const ForgotPasswordScreen = lazy(() => import('./features/auth/ForgotPasswordScreen'));
+const ResetPasswordScreen = lazy(() => import('./features/auth/ResetPasswordScreen'));
 const AudioRooms = lazy(() => import('./features/rooms/AudioRooms'));
 const SearchScreen = lazy(() => import('./features/search/SearchScreen'));
 const NotificationsScreen = lazy(() => import('./features/notifications/NotificationsScreen'));
@@ -45,6 +47,8 @@ export default function App() {
             path="/login" 
             element={isAuthenticated ? <Navigate to="/" replace /> : <LoginScreen />} 
           />
+          <Route path="/forgot-password" element={isAuthenticated ? <Navigate to="/" replace /> : <ForgotPasswordScreen />} />
+          <Route path="/reset-password" element={isAuthenticated ? <Navigate to="/" replace /> : <ResetPasswordScreen />} />
           <Route path="/legal/:page" element={<LegalScreen />} />
         </Route>
 

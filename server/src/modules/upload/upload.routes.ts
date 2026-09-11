@@ -103,7 +103,7 @@ type PersistedImage = {
 };
 
 async function persistImage(buffer: Buffer, options: ImageUploadOptions): Promise<PersistedImage> {
-  if (!process.env.CLOUDINARY_URL) {
+  if (!env.CLOUDINARY_URL) {
     return {
       url: await saveLocally(buffer, options.folder),
       storage: 'local',

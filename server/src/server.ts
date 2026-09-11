@@ -118,6 +118,7 @@ app.get('/api/health', async (_req, res) => {
     environment: env.NODE_ENV,
     services: {
       database: dbOk ? 'connected' : 'disconnected',
+      mediaStorage: env.CLOUDINARY_URL ? 'cloudinary_configured' : 'local_fallback',
     },
   });
 });

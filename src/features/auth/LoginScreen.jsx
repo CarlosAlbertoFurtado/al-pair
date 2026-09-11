@@ -151,6 +151,15 @@ export default function LoginScreen() {
         >
           {isRegistering ? 'Já tem conta? Faça login' : 'Não tem conta? Registre-se'}
         </button>
+
+        {!isRegistering && (
+          <Link
+            to="/forgot-password"
+            className="block w-full text-center text-sm text-rose-500 hover:text-rose-600 transition-colors font-bold"
+          >
+            Esqueci minha senha
+          </Link>
+        )}
       </form>
       <div className="mt-4 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs font-semibold text-slate-500">
         <Link to="/legal/terms" className="hover:text-rose-500">Termos</Link>

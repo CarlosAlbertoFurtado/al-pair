@@ -53,7 +53,7 @@ export const authController = {
 
   async forgotPassword(req: Request, res: Response): Promise<void> {
     const result = await authService.requestPasswordReset(req.body.email);
-    res.status(200).json({ success: true, message: result.message, data: { resetToken: result.resetToken } });
+    res.status(200).json({ success: true, message: result.message, data: { resetToken: result.resetToken, emailSent: result.emailSent } });
   },
 
   async resetPassword(req: Request, res: Response): Promise<void> {

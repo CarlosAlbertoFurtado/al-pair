@@ -61,6 +61,9 @@ Variaveis principais do backend:
 - `PORT`
 - `REDIS_URL` opcional
 - `CLOUDINARY_URL` recomendado para fotos de perfil e imagens em posts
+- `FRONTEND_URL` URL publica do frontend, usada nos links de recuperacao de senha
+- `RESEND_API_KEY` para envio real de e-mail de recuperacao de senha
+- `EMAIL_FROM` remetente validado no provedor de e-mail
 
 Variaveis principais do frontend:
 
@@ -106,6 +109,7 @@ Uploads:
 - O frontend tenta detectar rosto no navegador antes do envio quando a API `FaceDetector` existe.
 - Em producao, configure `CLOUDINARY_URL` no Render para armazenar imagens fora do disco efemero e permitir validacao de rosto no backend.
 - A beta inclui links de termos, privacidade e regras da comunidade no fluxo de cadastro.
+- Para recuperacao de senha funcionar em producao, configure `RESEND_API_KEY`, `EMAIL_FROM` e `FRONTEND_URL` no Render.
 
 ## Checklist antes de beta
 

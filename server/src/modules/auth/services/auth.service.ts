@@ -10,8 +10,7 @@ import { prisma } from '../../../config/database.js';
 import { env } from '../../../config/env.js';
 import { 
   UnauthorizedError, 
-  ConflictError, 
-  NotFoundError 
+  ConflictError
 } from '../../../shared/errors/AppError.js';
 type UserRole = string;
 
@@ -44,6 +43,51 @@ interface AuthResponse {
     isMentorActive: boolean;
   };
   tokens: TokenPair;
+}
+
+async function sendPasswordResetEmail(to: string, resetUrl: string): Promise<boolean> {
+  if (!env.RESEND_API_KEY) {
+    if (env.isDev) {
+      console.log(`[AUTH] Link de recuperação: ${resetUrl}`);
+    } else {
+      console.warn('[AUTH] RESEND_API_KEY ausente; e-mail de recuperação não enviado.');
+    }
+    return false;
+  }
+
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: env.EMAIL_FROM,
+        to,
+        subject: 'Redefina sua senha no AuPairConnect',
+        html: `
+          <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #0f172a;">
+            <h1 style="font-size: 20px;">Redefinição de senha</h1>
+            <p>Recebemos uma solicitação para redefinir sua senha no AuPairConnect.</p>
+            <p><a href="${resetUrl}" style="color: #e11d48; font-weight: bold;">Criar nova senha</a></p>
+            <p>Este link expira em 1 hora. Se você não pediu isso, ignore este e-mail.</p>
+          </div>
+        `,
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      console.error('[AUTH] Falha ao enviar e-mail de recuperação.', { status: response.status, body });
+      return false;
+    }
+  } catch (error) {
+    console.error('[AUTH] Erro ao chamar provedor de e-mail.', error);
+    return false;
+  }
+
+  return true;
 }
 
 // ─── Funções Auxiliares de Token ────────────────────────────
@@ -231,7 +275,7 @@ export const authService = {
    * - Invalida o refresh token específico
    * - Marca o usuário como offline
    */
-  async requestPasswordReset(email: string): Promise<{ message: string; resetToken?: string }> {
+  async requestPasswordReset(email: string): Promise<{ message: string; resetToken?: string; emailSent?: boolean }> {
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase().trim() },
     });
@@ -247,9 +291,13 @@ export const authService = {
       data: { userId: user.id, token: tokenHash, expiresAt },
     });
 
+    const resetUrl = `${env.FRONTEND_URL.replace(/\/$/, '')}/reset-password?token=${rawToken}`;
+    const emailSent = await sendPasswordResetEmail(user.email, resetUrl);
+
     return {
       message: 'Se o e-mail existir, enviaremos instruções de recuperação.',
-      resetToken: process.env.NODE_ENV === 'development' ? rawToken : undefined,
+      resetToken: env.isDev ? rawToken : undefined,
+      emailSent: env.isDev ? emailSent : undefined,
     };
   },
 

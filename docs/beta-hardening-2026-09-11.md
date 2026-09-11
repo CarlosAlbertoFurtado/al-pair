@@ -669,16 +669,19 @@ Aceite:
 
 Prioridade: media-alta.
 
+Status: implementado com provedor Resend opcional.
+
 Tarefas:
 
-- Integrar envio de e-mail real.
-- Criar tela de solicitar reset.
-- Criar tela de redefinir senha por token.
-- Expirar token apos janela curta.
+- Integrado envio de e-mail real via Resend quando `RESEND_API_KEY` estiver configurado.
+- Criada tela de solicitar reset.
+- Criada tela de redefinir senha por token.
+- Tokens continuam expirando apos 1 hora.
+- Refresh tokens do usuario sao revogados apos troca de senha.
 
 Aceite:
 
-- Usuario consegue recuperar acesso sem suporte manual.
+- Usuario consegue recuperar acesso sem suporte manual quando `RESEND_API_KEY`, `EMAIL_FROM` e `FRONTEND_URL` estiverem configurados no Render.
 
 ### 6. Testes de integracao e e2e
 
@@ -714,13 +717,56 @@ Aceite:
 
 ## Proximos passos recomendados
 
-1. Configurar `CLOUDINARY_URL` no Render.
+1. Configurar `CLOUDINARY_URL`, `FRONTEND_URL`, `RESEND_API_KEY` e `EMAIL_FROM` no Render.
 2. Fazer teste manual mobile completo apos deploy.
 3. Revisar textos de termos de uso, politica de privacidade e regras da comunidade.
-4. Integrar recuperacao de senha com e-mail real.
+4. Testar recuperacao de senha com e-mail real.
 5. Adicionar testes de integracao para bloqueio: feed, busca, perfil e chat.
 6. Criar e2e Playwright mobile do caminho principal.
 7. Validar Supabase backups/PITR e politica de retencao.
+
+## Rodada complementar: storage e recuperação de senha
+
+Commit previsto desta rodada:
+
+- `Add password reset screens and storage health`
+
+Arquivos alterados:
+
+- `server/src/config/env.ts`
+- `server/.env.example`
+- `server/src/server.ts`
+- `server/src/modules/upload/upload.routes.ts`
+- `server/src/modules/auth/services/auth.service.ts`
+- `server/src/modules/auth/controllers/auth.controller.ts`
+- `src/api.js`
+- `src/App.jsx`
+- `src/features/auth/LoginScreen.jsx`
+- `src/features/auth/ForgotPasswordScreen.jsx`
+- `src/features/auth/ResetPasswordScreen.jsx`
+- `README.md`
+- `docs/beta-hardening-2026-09-11.md`
+
+O que foi feito:
+
+- `CLOUDINARY_URL` passou a ser lido pelo `env.ts`, mantendo configuracao centralizada.
+- `/api/health` passou a indicar se o app esta usando `cloudinary_configured` ou `local_fallback` para mídia.
+- Criado fluxo visual de "Esqueci minha senha".
+- Criada tela publica `/reset-password` para receber token por link.
+- Backend envia e-mail de redefinicao via Resend quando `RESEND_API_KEY` esta configurado.
+- Em desenvolvimento, o token ainda aparece na resposta/log para facilitar teste local.
+- Em producao, token nao e exposto na API.
+
+Variaveis necessarias no Render:
+
+- `CLOUDINARY_URL`: storage persistente de imagens.
+- `FRONTEND_URL`: URL publica do Vercel, usada para gerar links de reset.
+- `RESEND_API_KEY`: chave do provedor de e-mail.
+- `EMAIL_FROM`: remetente validado no Resend.
+
+Risco restante:
+
+- Sem `RESEND_API_KEY`, o endpoint de recuperacao responde genericamente por seguranca, mas nenhum e-mail real e enviado.
 
 ## Rodada complementar: retirada do painel e base legal
 
