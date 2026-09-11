@@ -3,6 +3,7 @@ import { ArrowLeft, Ban, Flag, Heart, MapPin, MessageSquare, UserPlus, UserCheck
 import { useNavigate, useParams } from 'react-router-dom';
 import { BASE_URL, chatAPI, moderationAPI, postsAPI, usersAPI } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { ReportModal } from '../../components/ReportModal';
 import { useAuthStore } from '../../store/useAuthStore';
 import { PostCard } from '../feed/HomeFeed';
 
@@ -29,6 +30,9 @@ export default function UserProfileScreen() {
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [showReport, setShowReport] = useState(false);
   const lastPostRef = useRef(null);
 
   const isOwnProfile = viewer?.id === id;
@@ -91,6 +95,7 @@ export default function UserProfileScreen() {
 
   const handleFollow = async () => {
     if (!profile || isOwnProfile) return;
+    setActionError('');
     setActionLoading(true);
     try {
       const res = await usersAPI.follow(profile.id);
@@ -131,22 +136,16 @@ export default function UserProfileScreen() {
     }
   };
 
-  const handleReport = async () => {
+  const handleReport = async (payload) => {
     if (!profile || isOwnProfile) return;
-    const confirmed = window.confirm(`Denunciar ${profile.displayName} para moderação?`);
-    if (!confirmed) return;
-
     setActionLoading(true);
     try {
-      await moderationAPI.report({
-        targetType: 'USER',
-        targetId: profile.id,
-        reason: 'Comportamento impróprio',
-      });
-      alert('Denúncia enviada. Vamos revisar esse perfil.');
+      await moderationAPI.report(payload);
+      setNotice('Denúncia enviada para moderação.');
+      window.setTimeout(() => setNotice(''), 3500);
     } catch (err) {
       console.error('User report failed:', err);
-      alert('Não foi possível enviar a denúncia agora.');
+      throw err;
     } finally {
       setActionLoading(false);
     }
@@ -157,14 +156,14 @@ export default function UserProfileScreen() {
     const confirmed = window.confirm(`Bloquear ${profile.displayName}? Essa pessoa deixará de aparecer para você.`);
     if (!confirmed) return;
 
+    setActionError('');
     setActionLoading(true);
     try {
       await moderationAPI.block(profile.id);
-      alert('Usuário bloqueado.');
       navigate('/');
     } catch (err) {
       console.error('Block failed:', err);
-      alert('Não foi possível bloquear este usuário agora.');
+      setActionError('Não foi possível bloquear este usuário agora.');
     } finally {
       setActionLoading(false);
     }
@@ -267,7 +266,7 @@ export default function UserProfileScreen() {
             <div className="grid grid-cols-2 gap-3 mt-3">
               <button
                 type="button"
-                onClick={handleReport}
+                onClick={() => setShowReport(true)}
                 disabled={actionLoading}
                 className="h-10 rounded-xl bg-amber-50 text-amber-700 text-xs font-bold flex items-center justify-center gap-2 hover:bg-amber-100 disabled:opacity-60"
               >
@@ -283,6 +282,17 @@ export default function UserProfileScreen() {
                 <Ban size={16} />
                 Bloquear
               </button>
+            </div>
+          )}
+
+          {notice && (
+            <div className="mt-3 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+              {notice}
+            </div>
+          )}
+          {actionError && (
+            <div className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">
+              {actionError}
             </div>
           )}
         </div>
@@ -310,6 +320,15 @@ export default function UserProfileScreen() {
             <p className="text-center text-slate-400 text-xs py-6">Você viu todas as publicações.</p>
           )}
         </div>
+      )}
+      {showReport && profile && (
+        <ReportModal
+          targetType="USER"
+          targetId={profile.id}
+          targetName={profile.displayName}
+          onClose={() => setShowReport(false)}
+          onSubmit={handleReport}
+        />
       )}
     </div>
   );

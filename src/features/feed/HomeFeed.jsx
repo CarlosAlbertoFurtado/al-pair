@@ -3,6 +3,7 @@ import { Bookmark, Flag, Heart, MessageSquare, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { postsAPI, BASE_URL, moderationAPI } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { ReportModal } from '../../components/ReportModal';
 import { CommentsModal } from './CommentsModal';
 
 export function PostCard({ post }) {
@@ -10,6 +11,8 @@ export function PostCard({ post }) {
   const [likeCount, setLikeCount] = useState(post._count?.likes || post.likesCount || 0);
   const [saved, setSaved] = useState(post.isBookmarked || false);
   const [showComments, setShowComments] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [notice, setNotice] = useState('');
   const navigate = useNavigate();
 
   const handleLike = async () => {
@@ -40,28 +43,17 @@ export function PostCard({ post }) {
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-      } catch (err) {}
+      } catch {}
     } else {
       navigator.clipboard.writeText(`${post.content} - ${window.location.href}`);
       alert('Link copiado!');
     }
   };
 
-  const handleReport = async () => {
-    const confirmed = window.confirm('Denunciar esta publicação para moderação?');
-    if (!confirmed) return;
-
-    try {
-      await moderationAPI.report({
-        targetType: 'POST',
-        targetId: post.id,
-        reason: 'Conteúdo impróprio',
-      });
-      alert('Denúncia enviada. Obrigado por ajudar a manter a comunidade segura.');
-    } catch (err) {
-      console.error('Report failed:', err);
-      alert('Não foi possível enviar a denúncia agora.');
-    }
+  const handleReport = async (payload) => {
+    await moderationAPI.report(payload);
+    setNotice('Denúncia enviada para moderação.');
+    window.setTimeout(() => setNotice(''), 3500);
   };
 
   const imageUrl = post.imageUrl
@@ -155,14 +147,29 @@ export function PostCard({ post }) {
           <button onClick={handleBookmark} className={`transition-colors ${saved ? 'text-amber-500' : 'text-slate-400 hover:text-amber-400'}`}>
             <Bookmark size={20} fill={saved ? 'currentColor' : 'none'} />
           </button>
-          <button onClick={handleReport} className="text-slate-400 hover:text-red-500 transition-colors" aria-label="Denunciar publicação">
+          <button onClick={() => setShowReport(true)} className="text-slate-400 hover:text-red-500 transition-colors" aria-label="Denunciar publicação">
             <Flag size={19} />
           </button>
         </div>
       </div>
+
+      {notice && (
+        <div className="mx-4 mb-3 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+          {notice}
+        </div>
+      )}
       
       {showComments && (
         <CommentsModal post={post} onClose={() => setShowComments(false)} />
+      )}
+      {showReport && (
+        <ReportModal
+          targetType="POST"
+          targetId={post.id}
+          targetName={post.author?.displayName}
+          onClose={() => setShowReport(false)}
+          onSubmit={handleReport}
+        />
       )}
     </article>
   );
