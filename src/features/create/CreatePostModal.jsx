@@ -1,16 +1,42 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { X, Image, Send, AlertTriangle } from 'lucide-react';
-import { postsAPI } from '../../api';
+import { postsAPI, uploadAPI } from '../../api';
 
 export default function CreatePostModal({ onClose, onSuccess }) {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
+  const [imageUrl, setImageUrl] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef(null);
   
   // Rematch state
   const [isRematch, setIsRematch] = useState(false);
   const [rematchUrgency, setRematchUrgency] = useState('TRANSFER');
   const [rematchCity, setRematchCity] = useState('');
   const [rematchState, setRematchState] = useState('');
+
+  const handleImageSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Preview local
+    setImagePreview(URL.createObjectURL(file));
+    setUploadingImage(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await uploadAPI.upload(formData);
+      setImageUrl(res.data.data.url);
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      alert('Erro ao enviar imagem');
+      setImagePreview(null);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,6 +45,10 @@ export default function CreatePostModal({ onClose, onSuccess }) {
     try {
       const payload = { content: content.trim() };
       
+      if (imageUrl) {
+        payload.imageUrl = imageUrl;
+      }
+
       if (isRematch) {
         payload.type = 'REMATCH';
         payload.rematchUrgency = rematchUrgency;
@@ -122,14 +152,47 @@ export default function CreatePostModal({ onClose, onSuccess }) {
             </div>
           )}
           
+          {/* Image Preview */}
+          {imagePreview && (
+            <div className="relative">
+              <img src={imagePreview} alt="preview" className="w-full rounded-xl max-h-40 object-cover" />
+              {uploadingImage && (
+                <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center">
+                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
+              {!uploadingImage && (
+                <button 
+                  type="button" 
+                  onClick={() => { setImagePreview(null); setImageUrl(null); }}
+                  className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center text-xs hover:bg-black/70"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          )}
+          
           <div className="flex items-center justify-between mt-2">
-            <button type="button" className="flex items-center gap-2 px-4 py-2 text-rose-500 bg-rose-50 rounded-xl hover:bg-rose-100 font-medium">
+            <button 
+              type="button" 
+              onClick={() => fileInputRef.current?.click()} 
+              disabled={uploadingImage}
+              className="flex items-center gap-2 px-4 py-2 text-rose-500 bg-rose-50 rounded-xl hover:bg-rose-100 font-medium disabled:opacity-50"
+            >
               <Image size={18} />
-              <span className="text-sm">Foto</span>
+              <span className="text-sm">{uploadingImage ? 'Enviando...' : 'Foto'}</span>
             </button>
+            <input 
+              ref={fileInputRef} 
+              type="file" 
+              accept="image/*" 
+              className="hidden" 
+              onChange={handleImageSelect} 
+            />
             <button 
               type="submit" 
-              disabled={loading || !content.trim()}
+              disabled={loading || !content.trim() || uploadingImage}
               className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-rose-500 to-purple-600 text-white font-bold rounded-xl disabled:opacity-50 hover:opacity-90"
             >
               <span>{loading ? 'Enviando...' : 'Publicar'}</span>

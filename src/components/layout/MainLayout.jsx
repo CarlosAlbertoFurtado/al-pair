@@ -70,7 +70,7 @@ export default function MainLayout() {
       {/* Bottom Navigation */}
       <nav className="flex items-center justify-around bg-white border-t border-slate-200 px-2 py-2 pb-6 absolute bottom-0 w-full z-10 rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
         <NavItem to="/" icon={Home} label="Início" />
-        <NavItem to="/rooms" icon={Headphones} label="Salas" badge="Ao Vivo" />
+        <NavItem to="/rooms" icon={Headphones} label="Salas" />
         
         <button 
           onClick={() => setShowCreateMenu(true)}
@@ -79,7 +79,7 @@ export default function MainLayout() {
           <Plus size={28} />
         </button>
 
-        <NavItem to="/chat" icon={MessageCircle} label="Chat" badge="5" />
+        <NavItem to="/chat" icon={MessageCircle} label="Chat" />
         <NavItem to="/profile" icon={User} label="Perfil" />
       </nav>
 

@@ -25,6 +25,7 @@ interface FeedFilters {
   type?: PostType;
   cursor?: string;   // ID do último post (paginação por cursor)
   limit?: number;
+  authorId?: string;
 }
 
 // Select padrão para retornar posts com dados do autor
@@ -63,7 +64,7 @@ export const postsService = {
    */
   async getFeed(filters: FeedFilters, userId?: string) {
     const limit = Math.min(filters.limit ?? 20, 50); // Max 50 por request
-    const cacheKey = `feed:${filters.type || 'ALL'}:${filters.cursor || 'start'}:${userId || 'anon'}`;
+    const cacheKey = `feed:${filters.type || 'ALL'}:${filters.authorId || 'ANY'}:${filters.cursor || 'start'}:${userId || 'anon'}`;
 
     if (!filters.cursor) {
       const cached = await cacheGet<{ posts: unknown[]; nextCursor: string | null; hasNextPage: boolean; hasMore: boolean }>(cacheKey);
@@ -73,6 +74,7 @@ export const postsService = {
     const posts = await prisma.post.findMany({
       where: {
         ...(filters.type && { type: filters.type }),
+        ...(filters.authorId && { authorId: filters.authorId }),
       },
       select: {
         ...postSelect,

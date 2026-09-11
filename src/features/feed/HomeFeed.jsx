@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Heart, MessageSquare, Share2, MoreHorizontal, Bookmark } from 'lucide-react';
+import { Heart, MessageSquare, Share2, Bookmark } from 'lucide-react';
 import { postsAPI, BASE_URL } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { useAuthStore } from '../../store/useAuthStore';
+import { CommentsModal } from './CommentsModal';
 
-function PostCard({ post }) {
+export function PostCard({ post }) {
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likeCount, setLikeCount] = useState(post._count?.likes || post.likesCount || 0);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(false); // To do: use post.isBookmarked if backend returns it
+  const [showComments, setShowComments] = useState(false);
 
   const handleLike = async () => {
     try {
@@ -16,6 +18,31 @@ function PostCard({ post }) {
       setLikeCount(prev => isLiked ? prev - 1 : prev + 1);
     } catch (err) {
       console.error('Like failed:', err);
+    }
+  };
+
+  const handleBookmark = async () => {
+    try {
+      await postsAPI.toggleBookmark(post.id);
+      setSaved(!saved);
+    } catch (err) {
+      console.error('Bookmark failed:', err);
+    }
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'AuPairConnect Post',
+      text: post.content,
+      url: window.location.href,
+    };
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {}
+    } else {
+      navigator.clipboard.writeText(`${post.content} - ${window.location.href}`);
+      alert('Link copiado!');
     }
   };
 
@@ -34,7 +61,6 @@ function PostCard({ post }) {
           <p className="text-sm font-bold text-slate-900 truncate">{post.author?.displayName || 'Usuário'}</p>
           <p className="text-xs text-slate-400">{new Date(post.createdAt).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })}</p>
         </div>
-        <button className="p-1 text-slate-400 hover:text-slate-600"><MoreHorizontal size={18} /></button>
       </div>
 
       {/* Rematch Badge */}
@@ -74,18 +100,22 @@ function PostCard({ post }) {
             <Heart size={20} fill={isLiked ? 'currentColor' : 'none'} />
             <span className="text-xs font-bold">{likeCount}</span>
           </button>
-          <button className="flex items-center gap-1 text-slate-400 hover:text-blue-400 transition-colors">
+          <button onClick={() => setShowComments(true)} className="flex items-center gap-1 text-slate-400 hover:text-blue-400 transition-colors">
             <MessageSquare size={20} />
             <span className="text-xs font-bold">{post._count?.comments || 0}</span>
           </button>
-          <button className="text-slate-400 hover:text-green-400 transition-colors">
+          <button onClick={handleShare} className="text-slate-400 hover:text-green-400 transition-colors">
             <Share2 size={20} />
           </button>
         </div>
-        <button onClick={() => setSaved(!saved)} className={`transition-colors ${saved ? 'text-amber-500' : 'text-slate-400 hover:text-amber-400'}`}>
+        <button onClick={handleBookmark} className={`transition-colors ${saved ? 'text-amber-500' : 'text-slate-400 hover:text-amber-400'}`}>
           <Bookmark size={20} fill={saved ? 'currentColor' : 'none'} />
         </button>
       </div>
+      
+      {showComments && (
+        <CommentsModal post={post} onClose={() => setShowComments(false)} />
+      )}
     </article>
   );
 }
@@ -105,7 +135,7 @@ export default function HomeFeed() {
       if (nextCursor) setLoadingMore(true);
       else setLoading(true);
 
-      const res = await postsAPI.getFeed(nextCursor);
+      const res = await postsAPI.getFeed({ cursor: nextCursor });
       const data = res.data.data;
 
       setPosts(prev => nextCursor ? [...prev, ...data.posts] : data.posts);

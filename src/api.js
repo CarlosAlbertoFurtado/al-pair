@@ -102,9 +102,13 @@ export const authAPI = {
 };
 
 export const postsAPI = {
-  getFeed: (cursor) => api.get('/posts', { params: { cursor } }),
+  getFeed: (filters = {}) => api.get('/posts', { params: filters }),
   create: (data) => api.post('/posts', data),
   like: (id) => api.post(`/posts/${id}/like`),
+  getComments: (id) => api.get(`/posts/${id}/comments`),
+  addComment: (id, content) => api.post(`/posts/${id}/comments`, { content }),
+  toggleBookmark: (id) => api.post(`/posts/${id}/bookmark`),
+  getMyBookmarks: () => api.get('/posts/bookmarks/mine'),
 };
 
 export const chatAPI = {
@@ -126,10 +130,15 @@ export const roomsAPI = {
 };
 
 export const vaultAPI = {
-  list: () => api.get('/vault/documents'),
-  upload: (data) => api.post('/vault/documents', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  delete: (id) => api.delete(`/vault/documents/${id}`),
+  list: () => api.get('/vault'),
+  add: (data) => api.post('/vault', data),
+  delete: (id) => api.delete(`/vault/${id}`),
 };
+
+export const uploadAPI = {
+  upload: (formData) => api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+};
+
 
 export const searchAPI = {
   query: (q) => api.get('/search', { params: { q } }),

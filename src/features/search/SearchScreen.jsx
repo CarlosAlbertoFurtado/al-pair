@@ -87,7 +87,10 @@ export default function SearchScreen() {
                         <p className="text-sm font-bold text-slate-900 truncate">{user.displayName}</p>
                         <p className="text-xs text-slate-400 truncate">{user.role}</p>
                       </div>
-                      <button className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200">
+                      <button 
+                        onClick={() => alert(`👤 ${user.displayName}\n📍 ${user.city || 'Localização não informada'}\n🏷️ ${user.role}`)}
+                        className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200"
+                      >
                         Perfil
                       </button>
                     </div>

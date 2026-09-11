@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FileText, UploadCloud, Trash2, ShieldCheck, Download, Plus } from 'lucide-react';
-import { vaultAPI, BASE_URL } from '../../api';
+import { vaultAPI, uploadAPI, BASE_URL } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 export default function VaultScreen() {
@@ -16,7 +16,7 @@ export default function VaultScreen() {
   const fetchDocs = async () => {
     try {
       const res = await vaultAPI.list();
-      setDocuments(res.data.data.documents || []);
+      setDocuments(res.data.data.items || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -30,12 +30,22 @@ export default function VaultScreen() {
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('documentType', docType);
-    formData.append('title', file.name);
 
     setUploading(true);
     try {
-      await vaultAPI.upload(formData);
+      // 1. Envia o arquivo para a rota de upload
+      const uploadRes = await uploadAPI.upload(formData);
+      const fileUrl = uploadRes.data.data.url;
+
+      // 2. Adiciona o documento no cofre
+      await vaultAPI.add({
+        type: docType,
+        label: file.name,
+        fileUrl: fileUrl,
+        fileSizeKb: Math.round(file.size / 1024),
+        mimeType: file.type,
+      });
+
       fetchDocs();
     } catch (err) {
       console.error('Upload failed', err);

@@ -8,13 +8,14 @@ import type { AuthRequest } from '../../../middleware/authenticate.js';
 
 export const postsController = {
   async getFeed(req: AuthRequest, res: Response): Promise<void> {
-    const { type, cursor, limit } = req.query;
+    const { type, cursor, limit, authorId } = req.query;
 
     const result = await postsService.getFeed(
       {
         type: type as any,
         cursor: cursor as string,
         limit: limit ? parseInt(limit as string, 10) : undefined,
+        authorId: authorId as string,
       },
       req.userId
     );

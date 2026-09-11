@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Phone, Video, MessageSquare } from 'lucide-react';
+import { ArrowLeft, MessageSquare } from 'lucide-react';
 import { chatAPI, getSocket } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -51,8 +51,6 @@ function ChatConversation({ conversation, onBack }) {
           <p className="text-sm font-bold text-slate-900">{otherUser?.user?.displayName || 'Usuário'}</p>
           <p className="text-xs text-green-500">Online</p>
         </div>
-        <button className="p-2 text-slate-400 hover:text-slate-600"><Phone size={20} /></button>
-        <button className="p-2 text-slate-400 hover:text-slate-600"><Video size={20} /></button>
       </div>
 
       {/* Messages */}

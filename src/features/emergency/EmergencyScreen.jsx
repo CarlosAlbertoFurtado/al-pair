@@ -77,11 +77,42 @@ export default function EmergencyScreen() {
 
       {/* SOS Button */}
       <div className="p-6 flex flex-col items-center">
-        <button className="w-32 h-32 rounded-full bg-gradient-to-br from-red-500 to-rose-600 shadow-[0_10px_40px_rgba(225,29,72,0.4)] flex flex-col items-center justify-center text-white active:scale-95 transition-transform">
+        <button 
+          onTouchStart={() => {
+            const timer = setTimeout(() => {
+              const primary = contacts.find(c => c.isPrimary);
+              if (primary) {
+                window.location.href = `tel:${primary.phone}`;
+              } else if (contacts.length > 0) {
+                window.location.href = `tel:${contacts[0].phone}`;
+              } else {
+                alert('⚠️ Nenhum contato de emergência cadastrado!\n\nAdicione um contato abaixo para usar o SOS.');
+              }
+            }, 3000);
+            window.__sosTimer = timer;
+          }}
+          onTouchEnd={() => clearTimeout(window.__sosTimer)}
+          onMouseDown={() => {
+            const timer = setTimeout(() => {
+              const primary = contacts.find(c => c.isPrimary);
+              if (primary) {
+                window.location.href = `tel:${primary.phone}`;
+              } else if (contacts.length > 0) {
+                window.location.href = `tel:${contacts[0].phone}`;
+              } else {
+                alert('⚠️ Nenhum contato de emergência cadastrado!\n\nAdicione um contato abaixo para usar o SOS.');
+              }
+            }, 3000);
+            window.__sosTimer = timer;
+          }}
+          onMouseUp={() => clearTimeout(window.__sosTimer)}
+          onMouseLeave={() => clearTimeout(window.__sosTimer)}
+          className="w-32 h-32 rounded-full bg-gradient-to-br from-red-500 to-rose-600 shadow-[0_10px_40px_rgba(225,29,72,0.4)] flex flex-col items-center justify-center text-white active:scale-95 transition-transform"
+        >
           <AlertCircle size={40} className="mb-1" />
           <span className="font-black text-2xl tracking-wider">SOS</span>
         </button>
-        <p className="text-slate-500 text-xs mt-4 text-center">Segure por 3 segundos para enviar um alerta<br/>aos seus contatos principais.</p>
+        <p className="text-slate-500 text-xs mt-4 text-center">Segure por 3 segundos para ligar<br/>para seu contato principal.</p>
       </div>
 
       {/* Hotlines */}

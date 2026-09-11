@@ -35,9 +35,9 @@ export default function Profile() {
     {
       title: 'Minha Conta',
       items: [
-        { icon: Grid, label: 'Meus Posts', badge: stats.postsCount },
-        { icon: Star, label: 'Avaliações Recebidas' },
-        { icon: Award, label: 'Conquistas' },
+        { icon: Grid, label: 'Meus Posts', badge: stats.postsCount, onClick: () => navigate('/my-posts') },
+        // { icon: Star, label: 'Avaliações Recebidas' }, // Oculto: mock
+        // { icon: Award, label: 'Conquistas' }, // Oculto: mock
       ]
     },
     {
@@ -45,10 +45,11 @@ export default function Profile() {
       items: [
         { icon: FileText, label: 'Cofre Digital', desc: 'Documentos seguros', onClick: () => navigate('/vault') },
         { icon: CheckSquare, label: 'Minha Jornada', desc: 'Checklist de passos', onClick: () => navigate('/journey') },
-        { icon: Building, label: 'Agências', desc: 'Avaliações reais' },
+        // { icon: Building, label: 'Agências', desc: 'Avaliações reais' }, // Oculto: mock
         { icon: ShieldAlert, label: 'SOS & Emergências', desc: 'Ajuda rápida', onClick: () => navigate('/emergency') },
       ]
     },
+    /* Oculto por enquanto até MVP 2
     {
       title: 'Configurações',
       items: [
@@ -56,6 +57,7 @@ export default function Profile() {
         { icon: Globe, label: 'Idioma' },
       ]
     }
+    */
   ];
 
   return (
