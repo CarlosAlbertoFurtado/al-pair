@@ -1,5 +1,5 @@
 import { useEffect, Suspense, lazy } from 'react';
-import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/useAuthStore';
 import { LoadingSpinner } from './components/LoadingSpinner';
 
@@ -19,11 +19,10 @@ const NotificationsScreen = lazy(() => import('./features/notifications/Notifica
 const JourneyScreen = lazy(() => import('./features/journey/JourneyScreen'));
 const EmergencyScreen = lazy(() => import('./features/emergency/EmergencyScreen'));
 const MyPostsScreen = lazy(() => import('./features/profile/MyPostsScreen'));
+const UserProfileScreen = lazy(() => import('./features/profile/UserProfileScreen'));
 
 export default function App() {
   const { checkAuth, isAuthenticated, isLoading } = useAuthStore();
-  const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     checkAuth();
@@ -60,6 +59,7 @@ export default function App() {
           <Route path="/journey" element={<JourneyScreen />} />
           <Route path="/emergency" element={<EmergencyScreen />} />
           <Route path="/my-posts" element={<MyPostsScreen />} />
+          <Route path="/user/:id" element={<UserProfileScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

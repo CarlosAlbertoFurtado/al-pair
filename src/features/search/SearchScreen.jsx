@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, Search, User, FileText } from 'lucide-react';
+import { ChevronLeft, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { searchAPI, BASE_URL } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
@@ -80,15 +80,34 @@ export default function SearchScreen() {
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden divide-y divide-slate-50">
                   {results.users.map(user => (
                     <div key={user.id} className="flex items-center gap-3 p-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-rose-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
-                        {user.displayName[0].toUpperCase()}
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/user/${user.id}`)}
+                        className="w-10 h-10 rounded-full bg-gradient-to-tr from-rose-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm overflow-hidden shrink-0"
+                        aria-label={`Abrir perfil de ${user.displayName}`}
+                      >
+                        {user.avatarUrl ? (
+                          <img
+                            src={user.avatarUrl.startsWith('http') ? user.avatarUrl : `${BASE_URL}${user.avatarUrl}`}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          user.displayName[0].toUpperCase()
+                        )}
+                      </button>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-slate-900 truncate">{user.displayName}</p>
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/user/${user.id}`)}
+                          className="block max-w-full text-left text-sm font-bold text-slate-900 truncate hover:text-rose-500"
+                        >
+                          {user.displayName}
+                        </button>
                         <p className="text-xs text-slate-400 truncate">{user.role}</p>
                       </div>
                       <button 
-                        onClick={() => alert(`👤 ${user.displayName}\n📍 ${user.city || 'Localização não informada'}\n🏷️ ${user.role}`)}
+                        onClick={() => navigate(`/user/${user.id}`)}
                         className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200"
                       >
                         Perfil
@@ -107,10 +126,21 @@ export default function SearchScreen() {
                   {results.posts.map(post => (
                     <div key={post.id} className="p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold">
+                        <button
+                          type="button"
+                          onClick={() => post.author?.id && navigate(`/user/${post.author.id}`)}
+                          className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0"
+                          aria-label={`Abrir perfil de ${post.author?.displayName || 'usuário'}`}
+                        >
                           {(post.author?.displayName || 'U')[0].toUpperCase()}
-                        </div>
-                        <span className="text-xs font-bold text-slate-700">{post.author?.displayName}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => post.author?.id && navigate(`/user/${post.author.id}`)}
+                          className="text-xs font-bold text-slate-700 hover:text-rose-500"
+                        >
+                          {post.author?.displayName}
+                        </button>
                       </div>
                       <p className="text-sm text-slate-800 line-clamp-3">{post.content}</p>
                     </div>

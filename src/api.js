@@ -71,7 +71,7 @@ export const getSocket = () => {
   const token = localStorage.getItem('access_token');
   if (!token) return null;
 
-  if (socketInstance && socketInstance.connected) {
+  if (socketInstance) {
     return socketInstance;
   }
 
@@ -114,10 +114,12 @@ export const postsAPI = {
 export const chatAPI = {
   getConversations: () => api.get('/chat/conversations'),
   getMessages: (id, cursor) => api.get(`/chat/conversations/${id}/messages`, { params: { cursor } }),
+  getOrCreateDirect: (userId) => api.post(`/chat/direct/${userId}`),
 };
 
 export const usersAPI = {
   getProfile: (id) => api.get(`/users/${id}`),
+  follow: (id) => api.post(`/users/${id}/follow`),
 };
 
 export const roomsAPI = {

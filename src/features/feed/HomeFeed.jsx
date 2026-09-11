@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Heart, MessageSquare, Share2, Bookmark } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { postsAPI, BASE_URL } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
-import { useAuthStore } from '../../store/useAuthStore';
 import { CommentsModal } from './CommentsModal';
 
 export function PostCard({ post }) {
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likeCount, setLikeCount] = useState(post._count?.likes || post.likesCount || 0);
-  const [saved, setSaved] = useState(false); // To do: use post.isBookmarked if backend returns it
+  const [saved, setSaved] = useState(post.isBookmarked || false);
   const [showComments, setShowComments] = useState(false);
+  const navigate = useNavigate();
 
   const handleLike = async () => {
     try {
@@ -49,16 +50,41 @@ export function PostCard({ post }) {
   const imageUrl = post.imageUrl
     ? (post.imageUrl.startsWith('http') ? post.imageUrl : `${BASE_URL}${post.imageUrl}`)
     : null;
+  const avatarUrl = post.author?.avatarUrl
+    ? (post.author.avatarUrl.startsWith('http') ? post.author.avatarUrl : `${BASE_URL}${post.author.avatarUrl}`)
+    : null;
+  const authorId = post.author?.id || post.authorId;
+
+  const openAuthorProfile = () => {
+    if (authorId) navigate(`/user/${authorId}`);
+  };
 
   return (
     <article className="bg-white border-b border-slate-100 pb-2">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 pb-2">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-rose-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
-          {(post.author?.displayName || 'U')[0].toUpperCase()}
-        </div>
+        <button
+          type="button"
+          onClick={openAuthorProfile}
+          disabled={!authorId}
+          className="w-10 h-10 rounded-full bg-gradient-to-tr from-rose-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm overflow-hidden shrink-0 disabled:cursor-default"
+          aria-label={`Abrir perfil de ${post.author?.displayName || 'usuário'}`}
+        >
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+          ) : (
+            (post.author?.displayName || 'U')[0].toUpperCase()
+          )}
+        </button>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-slate-900 truncate">{post.author?.displayName || 'Usuário'}</p>
+          <button
+            type="button"
+            onClick={openAuthorProfile}
+            disabled={!authorId}
+            className="block max-w-full text-left text-sm font-bold text-slate-900 truncate hover:text-rose-500 disabled:hover:text-slate-900 disabled:cursor-default"
+          >
+            {post.author?.displayName || 'Usuário'}
+          </button>
           <p className="text-xs text-slate-400">{new Date(post.createdAt).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })}</p>
         </div>
       </div>
@@ -128,7 +154,6 @@ export default function HomeFeed() {
   const [hasMore, setHasMore] = useState(true);
   const observerRef = useRef(null);
   const lastPostRef = useRef(null);
-  const { user } = useAuthStore();
 
   const fetchPosts = useCallback(async (nextCursor = null) => {
     try {
