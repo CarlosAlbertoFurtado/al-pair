@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { searchAPI, BASE_URL } from '../../api';
+import { resolveAssetUrl, searchAPI } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 
 export default function SearchScreen() {
@@ -88,7 +88,7 @@ export default function SearchScreen() {
                       >
                         {user.avatarUrl ? (
                           <img
-                            src={user.avatarUrl.startsWith('http') ? user.avatarUrl : `${BASE_URL}${user.avatarUrl}`}
+                            src={resolveAssetUrl(user.avatarUrl)}
                             alt=""
                             className="w-full h-full object-cover"
                           />

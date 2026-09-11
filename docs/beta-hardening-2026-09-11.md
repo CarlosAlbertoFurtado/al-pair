@@ -826,3 +826,57 @@ Validações:
 Risco restante:
 
 - Os textos legais ainda sao base inicial operacional. Antes de lancamento publico amplo, precisam de revisao juridica.
+
+## Rodada complementar: fotos persistentes e texto legivel no mobile
+
+Data: 2026-09-11
+
+Arquivos alterados:
+
+- `src/api.js`
+- `src/index.css`
+- `src/features/profile/Profile.jsx`
+- `src/features/feed/HomeFeed.jsx`
+- `src/features/profile/UserProfileScreen.jsx`
+- `src/features/chat/ChatList.jsx`
+- `src/features/search/SearchScreen.jsx`
+- `docs/beta-hardening-2026-09-11.md`
+
+Problemas tratados:
+
+- Foto de perfil podia parecer carregada na tela, mas nao ficava salva se a usuaria nao clicasse em "Salvar".
+- Imagens locais retornadas como `/uploads/...` podiam quebrar quando `VITE_API_URL` apontava para uma origem diferente de `VITE_WS_URL`.
+- Avatar/post podia aparecer em uma tela e quebrar em outra, porque cada tela montava a URL de midia manualmente.
+- Em smartphones com modo escuro, campos de texto podiam herdar texto claro/branco enquanto o fundo do input continuava branco ou claro.
+
+O que foi feito:
+
+- Criado `ASSET_BASE_URL` em `src/api.js`, derivado de `VITE_API_URL` quando essa variavel existir.
+- Criado helper unico `resolveAssetUrl(url)` em `src/api.js`.
+- Feed, perfil publico, chat, busca e tela de perfil passaram a usar `resolveAssetUrl`.
+- Upload de avatar agora salva o `avatarUrl` no backend imediatamente apos o upload.
+- Estado global do usuario e atualizado depois do salvamento do avatar.
+- Adicionada regra global em `src/index.css` para `input`, `textarea` e `select` manterem texto escuro, cursor escuro e placeholder cinza.
+- Adicionado tratamento para `-webkit-autofill`, cobrindo Chrome/Safari mobile.
+
+Validações executadas:
+
+- `npm run build`
+- `npm run lint`
+
+Resultado:
+
+- Build do frontend passou.
+- Lint passou com warnings antigos ja existentes no projeto.
+
+Observacao importante para producao:
+
+- Fotos so persistem de verdade em producao se `CLOUDINARY_URL` estiver configurado no Render.
+- Sem Cloudinary, qualquer armazenamento local em Render/free tier pode sumir apos restart ou novo deploy.
+- O endpoint `/api/health/media` deve retornar sucesso antes de liberar upload de fotos para beta.
+
+Nota sobre moderacao:
+
+- O painel interno/admin de moderacao foi removido na rodada "retirada do painel e base legal".
+- O que continua no produto e intencional para beta: denunciar post, denunciar perfil, bloquear usuario e aplicar bloqueios no feed, busca, perfil e chat.
+- Durante beta pequena, denuncias podem ser revisadas manualmente no banco. Um painel operacional so deve voltar quando houver volume real e regras claras para moderadores.

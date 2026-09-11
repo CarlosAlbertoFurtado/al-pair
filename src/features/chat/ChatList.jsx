@@ -1,14 +1,9 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
-import { BASE_URL, chatAPI, getSocket } from '../../api';
+import { chatAPI, getSocket, resolveAssetUrl } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { useAuthStore } from '../../store/useAuthStore';
-
-function resolveAssetUrl(url) {
-  if (!url) return null;
-  return url.startsWith('http') ? url : `${BASE_URL}${url}`;
-}
 
 function ChatConversation({ conversation, onBack }) {
   const [messages, setMessages] = useState([]);

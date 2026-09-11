@@ -3,13 +3,8 @@ import { Camera, Grid, LogIn, ChevronRight, ShieldAlert, CheckSquare, Save } fro
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
-import { api, BASE_URL, uploadAPI, usersAPI } from '../../api';
+import { api, resolveAssetUrl, uploadAPI, usersAPI } from '../../api';
 import { hasVisibleFace, validatePhotoFile } from '../../utils/imageValidation';
-
-function resolveAssetUrl(url) {
-  if (!url) return null;
-  return url.startsWith('http') ? url : `${BASE_URL}${url}`;
-}
 
 export default function Profile() {
   const { user, userRole, logout, updateUser } = useAuthStore();
@@ -80,8 +75,12 @@ export default function Profile() {
       const formData = new FormData();
       formData.append('file', file);
       const res = await uploadAPI.avatar(formData);
-      updateField('avatarUrl', res.data.data.url);
-      setNotice('Foto carregada. Salve o perfil para aplicar.');
+      const uploadedUrl = res.data.data.url;
+      updateField('avatarUrl', uploadedUrl);
+
+      const profileRes = await usersAPI.updateProfile({ avatarUrl: uploadedUrl });
+      updateUser(profileRes.data.data.user);
+      setNotice('Foto de perfil atualizada com sucesso.');
     } catch (err) {
       console.error('Avatar upload failed:', err);
       setError(err.response?.data?.message || 'Não foi possível enviar a foto de perfil.');

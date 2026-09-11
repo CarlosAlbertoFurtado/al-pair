@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Bookmark, Flag, Heart, MessageSquare, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { postsAPI, BASE_URL, moderationAPI } from '../../api';
+import { postsAPI, moderationAPI, resolveAssetUrl } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { ReportModal } from '../../components/ReportModal';
 import { CommentsModal } from './CommentsModal';
@@ -56,12 +56,8 @@ export function PostCard({ post }) {
     window.setTimeout(() => setNotice(''), 3500);
   };
 
-  const imageUrl = post.imageUrl
-    ? (post.imageUrl.startsWith('http') ? post.imageUrl : `${BASE_URL}${post.imageUrl}`)
-    : null;
-  const avatarUrl = post.author?.avatarUrl
-    ? (post.author.avatarUrl.startsWith('http') ? post.author.avatarUrl : `${BASE_URL}${post.author.avatarUrl}`)
-    : null;
+  const imageUrl = resolveAssetUrl(post.imageUrl);
+  const avatarUrl = resolveAssetUrl(post.author?.avatarUrl);
   const authorId = post.author?.id || post.authorId;
 
   const openAuthorProfile = () => {

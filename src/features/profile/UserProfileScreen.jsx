@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Ban, Flag, Heart, MapPin, MessageSquare, UserPlus, UserCheck } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BASE_URL, chatAPI, moderationAPI, postsAPI, usersAPI } from '../../api';
+import { chatAPI, moderationAPI, postsAPI, resolveAssetUrl, usersAPI } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { ReportModal } from '../../components/ReportModal';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -12,11 +12,6 @@ const roleLabels = {
   ALUMNI: 'Alumni',
   MENTOR: 'Mentora',
 };
-
-function resolveAssetUrl(url) {
-  if (!url) return null;
-  return url.startsWith('http') ? url : `${BASE_URL}${url}`;
-}
 
 export default function UserProfileScreen() {
   const { id } = useParams();
