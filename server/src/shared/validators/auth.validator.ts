@@ -12,19 +12,15 @@ export const registerSchema = z.object({
     .max(255, 'E-mail muito longo.'),
   password: z
     .string({ required_error: 'Senha é obrigatória.' })
-    .min(8, 'Senha deve ter no mínimo 8 caracteres.')
-    .max(128, 'Senha muito longa.')
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      'Senha deve conter ao menos: 1 letra maiúscula, 1 minúscula e 1 número.'
-    ),
+    .min(6, 'Senha deve ter no mínimo 6 caracteres.')
+    .max(128, 'Senha muito longa.'),
   displayName: z
     .string({ required_error: 'Nome é obrigatório.' })
     .min(2, 'Nome deve ter no mínimo 2 caracteres.')
     .max(100, 'Nome muito longo.')
     .trim(),
-  role: z.enum(['CANDIDATE', 'ALUMNI'], {
-    errorMap: () => ({ message: 'Perfil deve ser CANDIDATE ou ALUMNI.' }),
+  role: z.enum(['CANDIDATE', 'ALUMNI', 'MENTOR'], {
+    errorMap: () => ({ message: 'Perfil deve ser CANDIDATE, ALUMNI ou MENTOR.' }),
   }),
 });
 
