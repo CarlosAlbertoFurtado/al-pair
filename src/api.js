@@ -119,6 +119,7 @@ export const chatAPI = {
 
 export const usersAPI = {
   getProfile: (id) => api.get(`/users/${id}`),
+  updateProfile: (data) => api.patch('/users/profile', data),
   follow: (id) => api.post(`/users/${id}/follow`),
 };
 
@@ -139,6 +140,8 @@ export const vaultAPI = {
 
 export const uploadAPI = {
   upload: (formData) => api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  postImage: (formData) => api.post('/upload/post-image', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  avatar: (formData) => api.post('/upload/avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
 };
 
 

@@ -5,6 +5,7 @@
 // ══════════════════════════════════════════════════════════════
 
 import { Request, Response, NextFunction } from 'express';
+import multer from 'multer';
 import { AppError, ValidationError } from '../shared/errors/AppError.js';
 import { env } from '../config/env.js';
 
@@ -20,6 +21,18 @@ export function errorHandler(
     message: err.message,
     stack: env.isDev ? err.stack : undefined,
   });
+
+  if (err instanceof multer.MulterError) {
+    const message = err.code === 'LIMIT_FILE_SIZE'
+      ? 'Arquivo muito grande. Envie uma imagem menor.'
+      : 'Não foi possível processar o arquivo enviado.';
+
+    res.status(413).json({
+      success: false,
+      message,
+    });
+    return;
+  }
 
   // Se for um AppError (erro esperado e controlado) - Duck typing evita problemas de instanceof
   if ('statusCode' in err && 'errors' in err) {

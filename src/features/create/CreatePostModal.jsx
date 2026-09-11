@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { X, Image, Send, AlertTriangle } from 'lucide-react';
 import { postsAPI, uploadAPI } from '../../api';
+import { validatePhotoFile } from '../../utils/imageValidation';
 
 export default function CreatePostModal({ onClose, onSuccess }) {
   const [content, setContent] = useState('');
@@ -8,6 +9,7 @@ export default function CreatePostModal({ onClose, onSuccess }) {
   const [imageUrl, setImageUrl] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef(null);
   
   // Rematch state
@@ -20,27 +22,39 @@ export default function CreatePostModal({ onClose, onSuccess }) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Preview local
+    const validationError = validatePhotoFile(file, { maxSizeMb: 8 });
+    if (validationError) {
+      setUploadError(validationError);
+      e.target.value = '';
+      return;
+    }
+
+    setUploadError('');
     setImagePreview(URL.createObjectURL(file));
     setUploadingImage(true);
 
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const res = await uploadAPI.upload(formData);
+      const res = await uploadAPI.postImage(formData);
       setImageUrl(res.data.data.url);
     } catch (err) {
       console.error('Image upload failed:', err);
-      alert('Erro ao enviar imagem');
+      setUploadError(err.response?.data?.message || 'Erro ao enviar imagem.');
       setImagePreview(null);
+      setImageUrl(null);
     } finally {
       setUploadingImage(false);
+      e.target.value = '';
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!content.trim()) return;
+    if (!content.trim() && !imageUrl) {
+      setUploadError('Escreva algo ou adicione uma foto para publicar.');
+      return;
+    }
     setLoading(true);
     try {
       const payload = { content: content.trim() };
@@ -61,7 +75,7 @@ export default function CreatePostModal({ onClose, onSuccess }) {
       onSuccess();
     } catch (err) {
       console.error(err);
-      alert('Erro ao criar publicação');
+      setUploadError(err.response?.data?.message || 'Erro ao criar publicação.');
     } finally {
       setLoading(false);
     }
@@ -172,6 +186,12 @@ export default function CreatePostModal({ onClose, onSuccess }) {
               )}
             </div>
           )}
+
+          {uploadError && (
+            <p className="rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">
+              {uploadError}
+            </p>
+          )}
           
           <div className="flex items-center justify-between mt-2">
             <button 
@@ -186,13 +206,13 @@ export default function CreatePostModal({ onClose, onSuccess }) {
             <input 
               ref={fileInputRef} 
               type="file" 
-              accept="image/*" 
+              accept="image/jpeg,image/png,image/webp"
               className="hidden" 
               onChange={handleImageSelect} 
             />
             <button 
               type="submit" 
-              disabled={loading || !content.trim() || uploadingImage}
+              disabled={loading || (!content.trim() && !imageUrl) || uploadingImage}
               className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-rose-500 to-purple-600 text-white font-bold rounded-xl disabled:opacity-50 hover:opacity-90"
             >
               <span>{loading ? 'Enviando...' : 'Publicar'}</span>

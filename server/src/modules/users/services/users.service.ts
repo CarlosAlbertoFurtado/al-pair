@@ -12,11 +12,11 @@ type UserRole = string;
 
 interface UpdateProfileInput {
   displayName?: string;
-  bio?: string;
-  avatarUrl?: string;
-  coverUrl?: string;
-  city?: string;
-  country?: string;
+  bio?: string | null;
+  avatarUrl?: string | null;
+  coverUrl?: string | null;
+  city?: string | null;
+  country?: string | null;
   latitude?: number;
   longitude?: number;
   specialties?: string[];
@@ -93,8 +93,8 @@ export const usersService = {
         ...(input.bio !== undefined && { bio: input.bio?.trim() || null }),
         ...(input.avatarUrl !== undefined && { avatarUrl: input.avatarUrl }),
         ...(input.coverUrl !== undefined && { coverUrl: input.coverUrl }),
-        ...(input.city !== undefined && { city: input.city }),
-        ...(input.country !== undefined && { country: input.country }),
+        ...(input.city !== undefined && { city: input.city?.trim() || null }),
+        ...(input.country !== undefined && { country: input.country?.trim() || null }),
         ...(input.latitude !== undefined && { latitude: input.latitude }),
         ...(input.longitude !== undefined && { longitude: input.longitude }),
         ...(input.specialties && { specialties: JSON.stringify(input.specialties) }),

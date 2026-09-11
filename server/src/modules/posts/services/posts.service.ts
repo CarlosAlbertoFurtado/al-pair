@@ -13,7 +13,7 @@ type RematchUrgency = string;
 // ─── Tipos ─────────────────────────────────────────────────
 
 interface CreatePostInput {
-  content: string;
+  content?: string;
   imageUrl?: string;
   type: PostType;
   rematchUrgency?: RematchUrgency;
@@ -128,7 +128,7 @@ export const postsService = {
     const post = await prisma.post.create({
       data: {
         authorId,
-        content: input.content.trim(),
+        content: input.content?.trim() || '',
         imageUrl: input.imageUrl,
         type: input.type,
         rematchUrgency: input.rematchUrgency,

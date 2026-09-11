@@ -30,6 +30,7 @@ Fora da beta por enquanto:
 - Node.js 20+
 - PostgreSQL
 - Redis opcional para WebSocket em escala
+- Cloudinary recomendado em producao para uploads e checagem de rosto em avatar
 
 ## Rodando localmente
 
@@ -59,6 +60,7 @@ Variaveis principais do backend:
 - `CORS_ORIGIN`
 - `PORT`
 - `REDIS_URL` opcional
+- `CLOUDINARY_URL` recomendado para fotos de perfil e imagens em posts
 
 Variaveis principais do frontend:
 
@@ -96,6 +98,13 @@ Frontend no Vercel:
 - Build: `npm run build`
 - Output: `dist`
 - Configure `VITE_API_URL` e `VITE_WS_URL` apontando para o backend publico.
+
+Uploads:
+
+- Posts aceitam JPEG, PNG e WEBP ate 8MB.
+- Avatar aceita JPEG, PNG e WEBP ate 3MB.
+- O frontend tenta detectar rosto no navegador antes do envio quando a API `FaceDetector` existe.
+- Em producao, configure `CLOUDINARY_URL` no Render para armazenar imagens fora do disco efemero e permitir validacao de rosto no backend.
 
 ## Checklist antes de beta
 

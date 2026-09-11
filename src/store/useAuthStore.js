@@ -63,5 +63,9 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  setUserRole: (role) => set({ userRole: role })
+  setUserRole: (role) => set({ userRole: role }),
+  updateUser: (updates) => set(state => ({
+    user: state.user ? { ...state.user, ...updates } : state.user,
+    userRole: updates.role ? updates.role.toLowerCase() : state.userRole,
+  })),
 }));

@@ -5,6 +5,8 @@
 import { Router } from 'express';
 import { usersController } from '../controllers/users.controller.js';
 import { authenticate, optionalAuth } from '../../../middleware/authenticate.js';
+import { validate } from '../../../middleware/validate.js';
+import { updateProfileSchema } from '../../../shared/validators/users.validator.js';
 
 const router = Router();
 
@@ -12,7 +14,7 @@ const router = Router();
 router.get('/nearby', authenticate, usersController.getNearbyUsers);
 
 // PATCH /api/users/profile - Atualizar próprio perfil
-router.patch('/profile', authenticate, usersController.updateProfile);
+router.patch('/profile', authenticate, validate(updateProfileSchema), usersController.updateProfile);
 
 // POST /api/users/mentor-toggle - Ativar/Desativar modo consultoria
 router.post('/mentor-toggle', authenticate, usersController.toggleMentorMode);
