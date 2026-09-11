@@ -108,6 +108,8 @@ Uploads:
 - Avatar aceita JPEG, PNG, WEBP, HEIC e HEIF ate 3MB.
 - O frontend tenta detectar rosto no navegador antes do envio quando a API `FaceDetector` existe.
 - Em producao, `CLOUDINARY_URL` precisa estar configurado no Render. Sem isso, o upload falha de proposito para evitar salvar imagens no disco efemero do Render, onde elas somem apos restart/redeploy.
+- O formato esperado e `cloudinary://API_KEY:API_SECRET@CLOUD_NAME`, sem aspas no valor do Render.
+- Confira `/api/health`: `mediaStorage` deve estar como `cloudinary_configured`, nao `missing_cloudinary_url` nem `invalid_cloudinary_url`.
 - Em desenvolvimento local, o backend ainda pode usar `UPLOAD_DIR` como fallback.
 - A beta inclui links de termos, privacidade e regras da comunidade no fluxo de cadastro.
 - Para recuperacao de senha funcionar em producao, configure `RESEND_API_KEY`, `EMAIL_FROM` e `FRONTEND_URL` no Render.

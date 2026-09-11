@@ -11,10 +11,11 @@ import path from 'path';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
 import sharp from 'sharp';
-import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary';
+import type { UploadApiResponse } from 'cloudinary';
 import { authenticate } from '../../middleware/authenticate.js';
 import { AppError } from '../../shared/errors/AppError.js';
 import { env } from '../../config/env.js';
+import { cloudinary, isCloudinaryConfigured, cloudinaryStatus } from '../../config/cloudinary.js';
 
 const router = Router();
 
@@ -103,9 +104,12 @@ type PersistedImage = {
 };
 
 async function persistImage(buffer: Buffer, options: ImageUploadOptions): Promise<PersistedImage> {
-  if (!env.CLOUDINARY_URL) {
+  if (!isCloudinaryConfigured()) {
     if (env.isProd) {
-      throw new AppError('Storage de imagens não configurado. Configure CLOUDINARY_URL no Render antes de enviar fotos.', 503);
+      const message = cloudinaryStatus.state === 'invalid'
+        ? 'CLOUDINARY_URL inválido no Render. Confira o formato cloudinary://API_KEY:API_SECRET@CLOUD_NAME.'
+        : 'Storage de imagens não configurado. Configure CLOUDINARY_URL no Render antes de enviar fotos.';
+      throw new AppError(message, 503);
     }
 
     return {
@@ -132,6 +136,7 @@ async function persistImage(buffer: Buffer, options: ImageUploadOptions): Promis
     if (error instanceof AppError) throw error;
     console.error('[UPLOAD] Cloudinary failed.', {
       message: error instanceof Error ? error.message : 'Unknown Cloudinary error',
+      cloudName: cloudinaryStatus.cloudName,
     });
 
     if (env.isProd) {
