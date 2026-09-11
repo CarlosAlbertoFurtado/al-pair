@@ -16,7 +16,7 @@
     "db:studio": "prisma studio",
     "db:up": "docker compose up -d",
     "lint": "eslint src/",
-    "test": "vitest"
+    "test": "node --import tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@prisma/client": "^6.9.0",

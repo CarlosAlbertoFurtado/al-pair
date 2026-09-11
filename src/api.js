@@ -163,3 +163,9 @@ export const emergencyAPI = {
   addContact: (data) => api.post('/emergency/contacts', data),
   removeContact: (id) => api.delete(`/emergency/contacts/${id}`),
 };
+
+export const moderationAPI = {
+  report: (data) => api.post('/moderation/report', data),
+  block: (userId) => api.post(`/moderation/block/${userId}`),
+  unblock: (userId) => api.delete(`/moderation/block/${userId}`),
+};

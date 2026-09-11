@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Grid, Award, MapPin, Calendar, LogIn, Star, Globe, Briefcase, Users, ToggleRight, ToggleLeft, ChevronRight, ShieldAlert, FileText, CheckSquare, Building } from 'lucide-react';
+import { Grid, LogIn, ChevronRight, ShieldAlert, CheckSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
@@ -43,7 +43,7 @@ export default function Profile() {
     {
       title: 'Ferramentas',
       items: [
-        { icon: FileText, label: 'Cofre Digital', desc: 'Documentos seguros', onClick: () => navigate('/vault') },
+        // Cofre Digital fica fora da beta ate existir politica LGPD, storage seguro e auditoria.
         { icon: CheckSquare, label: 'Minha Jornada', desc: 'Checklist de passos', onClick: () => navigate('/journey') },
         // { icon: Building, label: 'Agências', desc: 'Avaliações reais' }, // Oculto: mock
         { icon: ShieldAlert, label: 'SOS & Emergências', desc: 'Ajuda rápida', onClick: () => navigate('/emergency') },

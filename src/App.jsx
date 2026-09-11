@@ -13,7 +13,6 @@ const ChatList = lazy(() => import('./features/chat/ChatList'));
 const Profile = lazy(() => import('./features/profile/Profile'));
 const LoginScreen = lazy(() => import('./features/auth/LoginScreen'));
 const AudioRooms = lazy(() => import('./features/rooms/AudioRooms'));
-const VaultScreen = lazy(() => import('./features/vault/VaultScreen'));
 const SearchScreen = lazy(() => import('./features/search/SearchScreen'));
 const NotificationsScreen = lazy(() => import('./features/notifications/NotificationsScreen'));
 const JourneyScreen = lazy(() => import('./features/journey/JourneyScreen'));
@@ -53,7 +52,7 @@ export default function App() {
           <Route path="/chat" element={<ChatList />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/rooms" element={<AudioRooms />} />
-          <Route path="/vault" element={<VaultScreen />} />
+          <Route path="/vault" element={<Navigate to="/profile" replace />} />
           <Route path="/search" element={<SearchScreen />} />
           <Route path="/notifications" element={<NotificationsScreen />} />
           <Route path="/journey" element={<JourneyScreen />} />

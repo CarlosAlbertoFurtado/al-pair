@@ -167,9 +167,15 @@ async function bootstrap() {
   });
 }
 
-bootstrap().catch((error) => {
-  console.error('[FATAL]', error.message);
-  process.exit(1);
-});
+const isDirectRun = process.argv[1]
+  ? path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+  : false;
+
+if (isDirectRun) {
+  bootstrap().catch((error) => {
+    console.error('[FATAL]', error.message);
+    process.exit(1);
+  });
+}
 
 export default app;

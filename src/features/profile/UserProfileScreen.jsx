@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Heart, MapPin, MessageSquare, UserPlus, UserCheck } from 'lucide-react';
+import { ArrowLeft, Ban, Flag, Heart, MapPin, MessageSquare, UserPlus, UserCheck } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BASE_URL, chatAPI, postsAPI, usersAPI } from '../../api';
+import { BASE_URL, chatAPI, moderationAPI, postsAPI, usersAPI } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { useAuthStore } from '../../store/useAuthStore';
 import { PostCard } from '../feed/HomeFeed';
@@ -131,6 +131,45 @@ export default function UserProfileScreen() {
     }
   };
 
+  const handleReport = async () => {
+    if (!profile || isOwnProfile) return;
+    const confirmed = window.confirm(`Denunciar ${profile.displayName} para moderação?`);
+    if (!confirmed) return;
+
+    setActionLoading(true);
+    try {
+      await moderationAPI.report({
+        targetType: 'USER',
+        targetId: profile.id,
+        reason: 'Comportamento impróprio',
+      });
+      alert('Denúncia enviada. Vamos revisar esse perfil.');
+    } catch (err) {
+      console.error('User report failed:', err);
+      alert('Não foi possível enviar a denúncia agora.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleBlock = async () => {
+    if (!profile || isOwnProfile) return;
+    const confirmed = window.confirm(`Bloquear ${profile.displayName}? Essa pessoa deixará de aparecer para você.`);
+    if (!confirmed) return;
+
+    setActionLoading(true);
+    try {
+      await moderationAPI.block(profile.id);
+      alert('Usuário bloqueado.');
+      navigate('/');
+    } catch (err) {
+      console.error('Block failed:', err);
+      alert('Não foi possível bloquear este usuário agora.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading) return <div className="flex justify-center p-10"><LoadingSpinner /></div>;
 
   if (error || !profile) {
@@ -223,6 +262,29 @@ export default function UserProfileScreen() {
               Mensagem
             </button>
           </div>
+
+          {!isOwnProfile && (
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <button
+                type="button"
+                onClick={handleReport}
+                disabled={actionLoading}
+                className="h-10 rounded-xl bg-amber-50 text-amber-700 text-xs font-bold flex items-center justify-center gap-2 hover:bg-amber-100 disabled:opacity-60"
+              >
+                <Flag size={16} />
+                Denunciar
+              </button>
+              <button
+                type="button"
+                onClick={handleBlock}
+                disabled={actionLoading}
+                className="h-10 rounded-xl bg-red-50 text-red-600 text-xs font-bold flex items-center justify-center gap-2 hover:bg-red-100 disabled:opacity-60"
+              >
+                <Ban size={16} />
+                Bloquear
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

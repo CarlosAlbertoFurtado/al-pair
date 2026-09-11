@@ -32,7 +32,9 @@ export const usersController = {
     const users = await usersService.getNearbyUsers(
       parseFloat(lat as string),
       parseFloat(lon as string),
-      radius ? parseFloat(radius as string) : undefined
+      radius ? parseFloat(radius as string) : undefined,
+      undefined,
+      req.userId
     );
     res.status(200).json({ success: true, data: { users } });
   },

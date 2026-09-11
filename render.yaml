@@ -4,18 +4,22 @@ services:
     env: node
     plan: free
     region: ohio
+    rootDir: server
     buildCommand: npm ci && npm run db:generate && npm run build
     startCommand: npm start
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        sync: false # O usuário precisará colar a URL do Neon/Supabase aqui
+        sync: false
       - key: PORT
         value: 3001
       - key: JWT_ACCESS_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
+      - key: CORS_ORIGIN
+        sync: false
       - key: REDIS_URL
-        sync: false # (Opcional) se quiser usar Redis na nuvem
+        sync: false

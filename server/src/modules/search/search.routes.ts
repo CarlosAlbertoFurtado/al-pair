@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../../config/database.js';
 import { optionalAuth, type AuthRequest } from '../../middleware/authenticate.js';
+import { visiblePostWhere, visibleUserWhere } from '../moderation/moderation.service.js';
 
 const router = Router();
 
@@ -14,6 +15,7 @@ router.get('/', optionalAuth, async (req: AuthRequest, res) => {
   const [users, posts, agencies] = await Promise.all([
     prisma.user.findMany({
       where: {
+        ...visibleUserWhere(req.userId),
         OR: [
           { displayName: { contains: q, mode: 'insensitive' } },
           { city: { contains: q, mode: 'insensitive' } },
@@ -33,6 +35,7 @@ router.get('/', optionalAuth, async (req: AuthRequest, res) => {
     }),
     prisma.post.findMany({
       where: {
+        ...visiblePostWhere(req.userId),
         OR: [
           { content: { contains: q, mode: 'insensitive' } },
           { rematchCity: { contains: q, mode: 'insensitive' } },

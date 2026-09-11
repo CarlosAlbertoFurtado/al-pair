@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../../config/database.js';
 import { authenticate, type AuthRequest } from '../../middleware/authenticate.js';
 import { validate } from '../../middleware/validate.js';
-import { ConflictError } from '../../shared/errors/AppError.js';
+import { ConflictError, NotFoundError } from '../../shared/errors/AppError.js';
 
 const router = Router();
 
@@ -15,6 +15,21 @@ const reportSchema = z.object({
 });
 
 router.post('/report', authenticate, validate(reportSchema), async (req: AuthRequest, res) => {
+  if (req.body.targetType === 'USER') {
+    const user = await prisma.user.findUnique({ where: { id: req.body.targetId }, select: { id: true } });
+    if (!user) throw new NotFoundError('Usuário');
+  }
+
+  if (req.body.targetType === 'POST') {
+    const post = await prisma.post.findUnique({ where: { id: req.body.targetId }, select: { id: true } });
+    if (!post) throw new NotFoundError('Post');
+  }
+
+  if (req.body.targetType === 'MESSAGE') {
+    const message = await prisma.message.findUnique({ where: { id: req.body.targetId }, select: { id: true } });
+    if (!message) throw new NotFoundError('Mensagem');
+  }
+
   const report = await prisma.report.create({
     data: { reporterId: req.userId!, ...req.body },
   });
@@ -26,11 +41,24 @@ router.post('/block/:userId', authenticate, async (req: AuthRequest, res) => {
   const blockedId = req.params.userId as string;
   if (blockerId === blockedId) throw new ConflictError('Não é possível bloquear a si mesmo.');
 
-  await prisma.userBlock.upsert({
-    where: { blockerId_blockedId: { blockerId, blockedId } },
-    create: { blockerId, blockedId },
-    update: {},
-  });
+  const target = await prisma.user.findUnique({ where: { id: blockedId }, select: { id: true } });
+  if (!target) throw new NotFoundError('Usuário');
+
+  await prisma.$transaction([
+    prisma.userBlock.upsert({
+      where: { blockerId_blockedId: { blockerId, blockedId } },
+      create: { blockerId, blockedId },
+      update: {},
+    }),
+    prisma.follow.deleteMany({
+      where: {
+        OR: [
+          { followerId: blockerId, followingId: blockedId },
+          { followerId: blockedId, followingId: blockerId },
+        ],
+      },
+    }),
+  ]);
   res.json({ success: true, message: 'Usuário bloqueado.' });
 });
 

@@ -6,6 +6,7 @@ import { prisma } from '../../../config/database.js';
 import { cacheGet, cacheSet, cacheDel } from '../../../config/redis.js';
 import { NotFoundError, ForbiddenError } from '../../../shared/errors/AppError.js';
 import { createNotification } from '../../notifications/notifications.routes.js';
+import { hasBlockBetween, visiblePostWhere } from '../../moderation/moderation.service.js';
 type PostType = string;
 type RematchUrgency = string;
 
@@ -73,6 +74,7 @@ export const postsService = {
 
     const posts = await prisma.post.findMany({
       where: {
+        ...visiblePostWhere(userId),
         ...(filters.type && { type: filters.type }),
         ...(filters.authorId && { authorId: filters.authorId }),
       },
@@ -264,6 +266,9 @@ export const postsService = {
   async addComment(postId: string, authorId: string, content: string) {
     const post = await prisma.post.findUnique({ where: { id: postId } });
     if (!post) throw new NotFoundError('Post');
+    if (await hasBlockBetween(authorId, post.authorId)) {
+      throw new ForbiddenError('Você não pode comentar nesta publicação.');
+    }
 
     const [comment] = await prisma.$transaction([
       prisma.comment.create({

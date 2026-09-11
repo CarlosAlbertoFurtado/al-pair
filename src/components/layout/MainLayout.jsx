@@ -27,12 +27,11 @@ function NavItem({ to, icon: Icon, label, badge }) {
 }
 
 import CreatePostModal from '../../features/create/CreatePostModal';
-import CreateRoomModal from '../../features/create/CreateRoomModal';
-import { PenSquare, Mic } from 'lucide-react';
+import { PenSquare } from 'lucide-react';
 
 export default function MainLayout() {
   const [showCreateMenu, setShowCreateMenu] = useState(false);
-  const [activeModal, setActiveModal] = useState(null); // 'post' | 'room' | null
+  const [activeModal, setActiveModal] = useState(null); // 'post' | null
   const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
 
@@ -94,7 +93,7 @@ export default function MainLayout() {
               </button>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <button 
                 onClick={() => { setShowCreateMenu(false); setActiveModal('post'); }}
                 className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-slate-50 border border-slate-100 hover:border-rose-300 hover:bg-rose-50 transition-all group"
@@ -103,16 +102,6 @@ export default function MainLayout() {
                   <PenSquare size={28} />
                 </div>
                 <span className="font-bold text-slate-700">Publicação</span>
-              </button>
-              
-              <button 
-                onClick={() => { setShowCreateMenu(false); setActiveModal('room'); }}
-                className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-slate-50 border border-slate-100 hover:border-indigo-300 hover:bg-indigo-50 transition-all group"
-              >
-                <div className="w-14 h-14 rounded-full bg-indigo-100 text-indigo-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Mic size={28} />
-                </div>
-                <span className="font-bold text-slate-700">Sala de Áudio</span>
               </button>
             </div>
           </div>
@@ -127,15 +116,6 @@ export default function MainLayout() {
             setActiveModal(null);
             // In a real app we'd refresh the feed here or use global state
             window.location.reload(); 
-          }} 
-        />
-      )}
-      {activeModal === 'room' && (
-        <CreateRoomModal 
-          onClose={() => setActiveModal(null)} 
-          onSuccess={() => {
-            setActiveModal(null);
-            window.location.href = '/rooms';
           }} 
         />
       )}

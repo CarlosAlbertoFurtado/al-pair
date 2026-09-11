@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Heart, MessageSquare, Share2, Bookmark } from 'lucide-react';
+import { Bookmark, Flag, Heart, MessageSquare, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { postsAPI, BASE_URL } from '../../api';
+import { postsAPI, BASE_URL, moderationAPI } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { CommentsModal } from './CommentsModal';
 
@@ -44,6 +44,23 @@ export function PostCard({ post }) {
     } else {
       navigator.clipboard.writeText(`${post.content} - ${window.location.href}`);
       alert('Link copiado!');
+    }
+  };
+
+  const handleReport = async () => {
+    const confirmed = window.confirm('Denunciar esta publicação para moderação?');
+    if (!confirmed) return;
+
+    try {
+      await moderationAPI.report({
+        targetType: 'POST',
+        targetId: post.id,
+        reason: 'Conteúdo impróprio',
+      });
+      alert('Denúncia enviada. Obrigado por ajudar a manter a comunidade segura.');
+    } catch (err) {
+      console.error('Report failed:', err);
+      alert('Não foi possível enviar a denúncia agora.');
     }
   };
 
@@ -134,9 +151,14 @@ export function PostCard({ post }) {
             <Share2 size={20} />
           </button>
         </div>
-        <button onClick={handleBookmark} className={`transition-colors ${saved ? 'text-amber-500' : 'text-slate-400 hover:text-amber-400'}`}>
-          <Bookmark size={20} fill={saved ? 'currentColor' : 'none'} />
-        </button>
+        <div className="flex items-center gap-4">
+          <button onClick={handleBookmark} className={`transition-colors ${saved ? 'text-amber-500' : 'text-slate-400 hover:text-amber-400'}`}>
+            <Bookmark size={20} fill={saved ? 'currentColor' : 'none'} />
+          </button>
+          <button onClick={handleReport} className="text-slate-400 hover:text-red-500 transition-colors" aria-label="Denunciar publicação">
+            <Flag size={19} />
+          </button>
+        </div>
       </div>
       
       {showComments && (

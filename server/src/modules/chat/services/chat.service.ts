@@ -5,6 +5,7 @@
 import { prisma } from '../../../config/database.js';
 import { NotFoundError, ForbiddenError } from '../../../shared/errors/AppError.js';
 import { createNotification } from '../../notifications/notifications.routes.js';
+import { hasBlockBetween } from '../../moderation/moderation.service.js';
 
 // ─── Service ───────────────────────────────────────────────
 
@@ -47,11 +48,19 @@ export const chatService = {
     });
 
     // Para cada conversa, calcular dados relativos ao viewer
-    return conversations.map(conv => {
+    const visibleConversations = [];
+
+    for (const conv of conversations) {
       const myParticipant = conv.participants.find(p => p.userId === userId);
       const otherParticipants = conv.participants.filter(p => p.userId !== userId);
+
+      const blocked = await Promise.all(
+        otherParticipants.map((p) => hasBlockBetween(userId, p.userId))
+      );
+
+      if (blocked.some(Boolean)) continue;
       
-      return {
+      visibleConversations.push({
         id: conv.id,
         isGroup: conv.isGroup,
         groupName: conv.groupName,
@@ -63,8 +72,10 @@ export const chatService = {
           ...p.user,
           isTyping: p.isTyping,
         })),
-      };
-    });
+      });
+    }
+
+    return visibleConversations;
   },
 
   /**
@@ -76,6 +87,13 @@ export const chatService = {
       where: { conversationId_userId: { conversationId, userId } },
     });
     if (!membership) throw new ForbiddenError('Você não faz parte desta conversa.');
+
+    const participants = await prisma.conversationUser.findMany({
+      where: { conversationId, userId: { not: userId } },
+      select: { userId: true },
+    });
+    const blocked = await Promise.all(participants.map((p) => hasBlockBetween(userId, p.userId)));
+    if (blocked.some(Boolean)) throw new ForbiddenError('Conversa indisponível.');
 
     const limit = 30;
 
@@ -130,6 +148,13 @@ export const chatService = {
       where: { conversationId_userId: { conversationId, userId: senderId } },
     });
     if (!membership) throw new ForbiddenError('Você não faz parte desta conversa.');
+
+    const recipients = await prisma.conversationUser.findMany({
+      where: { conversationId, userId: { not: senderId } },
+      select: { userId: true },
+    });
+    const blocked = await Promise.all(recipients.map((p) => hasBlockBetween(senderId, p.userId)));
+    if (blocked.some(Boolean)) throw new ForbiddenError('Conversa indisponível.');
 
     const preview = content.length > 60 ? content.substring(0, 57) + '...' : content;
 
@@ -196,6 +221,9 @@ export const chatService = {
    * Se já existir, retorna a existente.
    */
   async getOrCreateDirectConversation(userId1: string, userId2: string) {
+    if (userId1 === userId2) throw new ForbiddenError('Conversa direta inválida.');
+    if (await hasBlockBetween(userId1, userId2)) throw new ForbiddenError('Conversa indisponível.');
+
     // Buscar conversa existente entre os dois (não grupo)
     const existing = await prisma.conversation.findFirst({
       where: {

@@ -3,8 +3,9 @@
 // ══════════════════════════════════════════════════════════════
 
 import { prisma } from '../../../config/database.js';
-import { NotFoundError, ConflictError } from '../../../shared/errors/AppError.js';
+import { NotFoundError, ConflictError, ForbiddenError } from '../../../shared/errors/AppError.js';
 import { createNotification } from '../../notifications/notifications.routes.js';
+import { hasBlockBetween, visibleUserWhere } from '../../moderation/moderation.service.js';
 type UserRole = string;
 
 // ─── Tipos ─────────────────────────────────────────────────
@@ -56,6 +57,10 @@ export const usersService = {
    * Busca perfil público de um usuário pelo ID.
    */
   async getProfile(userId: string, viewerId?: string) {
+    if (viewerId && viewerId !== userId && await hasBlockBetween(viewerId, userId)) {
+      throw new NotFoundError('Usuário');
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -142,6 +147,9 @@ export const usersService = {
 
     const target = await prisma.user.findUnique({ where: { id: followingId } });
     if (!target) throw new NotFoundError('Usuário');
+    if (await hasBlockBetween(followerId, followingId)) {
+      throw new ForbiddenError('Não é possível seguir este usuário.');
+    }
 
     const existingFollow = await prisma.follow.findUnique({
       where: { followerId_followingId: { followerId, followingId } },
@@ -162,13 +170,14 @@ export const usersService = {
    * Usa cálculo de distância Haversine simplificado para performance.
    * Em produção com PostGIS, usar ST_DWithin para escala real.
    */
-  async getNearbyUsers(latitude: number, longitude: number, radiusKm: number = 50, limit: number = 30) {
+  async getNearbyUsers(latitude: number, longitude: number, radiusKm: number = 50, limit: number = 30, viewerId?: string) {
     // Bounding box simplificado (filtro grosseiro antes do cálculo fino)
     const latDelta = radiusKm / 111; // ~111 km por grau de latitude
     const lonDelta = radiusKm / (111 * Math.cos(latitude * Math.PI / 180));
 
     const users = await prisma.user.findMany({
       where: {
+        ...visibleUserWhere(viewerId),
         latitude: {
           gte: latitude - latDelta,
           lte: latitude + latDelta,
