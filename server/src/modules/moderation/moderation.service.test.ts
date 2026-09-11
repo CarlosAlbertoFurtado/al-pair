@@ -2,10 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   buildReportData,
-  parseAdminEmails,
-  reportListQuerySchema,
   reportSchema,
-  reportStatusSchema,
   visiblePostWhere,
   visibleUserWhere,
 } from './moderation.service.js';
@@ -69,15 +66,5 @@ describe('moderation service', () => {
     assert.deepEqual(visiblePostWhere('viewer-1'), {
       author: visibleUserWhere('viewer-1'),
     });
-  });
-
-  it('parses admin emails safely', () => {
-    assert.deepEqual(parseAdminEmails(' Admin@App.com, suporte@app.com ,, '), ['admin@app.com', 'suporte@app.com']);
-  });
-
-  it('validates admin report filters and statuses', () => {
-    assert.equal(reportListQuerySchema.safeParse({ status: 'ALL', limit: '25' }).success, true);
-    assert.equal(reportStatusSchema.safeParse({ status: 'ACTIONED' }).success, true);
-    assert.equal(reportStatusSchema.safeParse({ status: 'DELETED' }).success, false);
   });
 });

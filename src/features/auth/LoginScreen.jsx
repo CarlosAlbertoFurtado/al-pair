@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Globe } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 
 export default function LoginScreen() {
@@ -9,6 +10,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [role, setRole] = useState('CANDIDATE');
+  const [acceptedPolicies, setAcceptedPolicies] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -19,6 +21,10 @@ export default function LoginScreen() {
 
     try {
       if (isRegistering) {
+        if (!acceptedPolicies) {
+          setError('Você precisa aceitar os termos para criar a conta.');
+          return;
+        }
         const { authAPI } = await import('../../api');
         await authAPI.register({ email, password, displayName, role });
       }
@@ -112,9 +118,27 @@ export default function LoginScreen() {
           />
         </div>
 
+        {isRegistering && (
+          <label className="flex items-start gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600">
+            <input
+              type="checkbox"
+              checked={acceptedPolicies}
+              onChange={(e) => setAcceptedPolicies(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-slate-300 text-rose-500 focus:ring-rose-300"
+              required
+            />
+            <span>
+              Li e aceito os{' '}
+              <Link to="/legal/terms" className="font-bold text-rose-600 hover:text-rose-700">Termos</Link>, a{' '}
+              <Link to="/legal/privacy" className="font-bold text-rose-600 hover:text-rose-700">Privacidade</Link> e as{' '}
+              <Link to="/legal/community" className="font-bold text-rose-600 hover:text-rose-700">Regras da comunidade</Link>.
+            </span>
+          </label>
+        )}
+
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || (isRegistering && !acceptedPolicies)}
           className="w-full bg-gradient-to-r from-rose-500 to-purple-600 text-white font-bold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 shadow-md"
         >
           {loading ? '⏳ Processando...' : (isRegistering ? 'Criar Conta' : 'Entrar')}
@@ -128,6 +152,11 @@ export default function LoginScreen() {
           {isRegistering ? 'Já tem conta? Faça login' : 'Não tem conta? Registre-se'}
         </button>
       </form>
+      <div className="mt-4 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs font-semibold text-slate-500">
+        <Link to="/legal/terms" className="hover:text-rose-500">Termos</Link>
+        <Link to="/legal/privacy" className="hover:text-rose-500">Privacidade</Link>
+        <Link to="/legal/community" className="hover:text-rose-500">Regras</Link>
+      </div>
     </div>
   );
 }

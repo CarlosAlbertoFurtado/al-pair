@@ -632,30 +632,22 @@ Aceite:
 
 - Fluxo completo funciona em iPhone e Android, sem erro interno.
 
-### 3. Painel minimo de moderacao
+### 3. Moderacao operacional
 
 Prioridade: alta.
 
-Status: implementado nesta rodada.
+Status: adiado para depois da beta inicial.
 
 Tarefas:
 
-- Criada tela admin simples para listar denuncias por status.
-- Criado controle de acesso por `ADMIN_EMAILS` no backend.
-- Criados endpoints `GET /api/moderation/reports` e `PATCH /api/moderation/reports/:id/status`.
-- Permitido marcar denuncia como `REVIEWING`, `ACTIONED` ou `DISMISSED`.
-- Incluido resumo do alvo da denuncia: usuario, post ou mensagem.
-- Exibidos data, reporter, motivo e descricao.
+- Manter denuncia e bloqueio funcionando no app.
+- Revisar denuncias manualmente no banco durante a beta pequena.
+- Criar painel interno somente quando houver volume real de denuncias.
+- Definir antes as regras de acao: remover conteudo, advertir, suspender ou banir.
 
 Aceite:
 
-- Voce consegue operar denuncias sem acessar banco manualmente usando `/admin/moderation`.
-
-Configuracao obrigatoria:
-
-- No Render, configure `ADMIN_EMAILS` com o e-mail da conta administradora.
-- Exemplo: `ADMIN_EMAILS=admin@seudominio.com,suporte@seudominio.com`.
-- Sem essa variavel, o painel responde com acesso negado por seguranca.
+- A beta pequena consegue lidar com denuncias sem expor uma ferramenta administrativa incompleta.
 
 ### 4. Politicas obrigatorias para beta
 
@@ -671,7 +663,7 @@ Tarefas:
 
 Aceite:
 
-- Links aparecem no cadastro/login e no rodape/configuracoes.
+- Links aparecem no cadastro/login e aceite fica obrigatorio ao criar conta.
 
 ### 5. Recuperacao de senha real
 
@@ -722,43 +714,41 @@ Aceite:
 
 ## Proximos passos recomendados
 
-1. Configurar `ADMIN_EMAILS` e `CLOUDINARY_URL` no Render.
+1. Configurar `CLOUDINARY_URL` no Render.
 2. Fazer teste manual mobile completo apos deploy.
-3. Criar termos de uso, politica de privacidade e regras da comunidade.
+3. Revisar textos de termos de uso, politica de privacidade e regras da comunidade.
 4. Integrar recuperacao de senha com e-mail real.
 5. Adicionar testes de integracao para bloqueio: feed, busca, perfil e chat.
 6. Criar e2e Playwright mobile do caminho principal.
 7. Validar Supabase backups/PITR e politica de retencao.
 
-## Rodada complementar: painel minimo de moderacao
+## Rodada complementar: retirada do painel e base legal
 
 Commit previsto desta rodada:
 
-- `Add moderation review panel`
+- `Add beta legal pages`
 
 Arquivos alterados:
 
-- `server/src/config/env.ts`
 - `server/.env.example`
 - `server/src/modules/moderation/moderation.routes.ts`
 - `server/src/modules/moderation/moderation.service.ts`
 - `server/src/modules/moderation/moderation.service.test.ts`
 - `src/api.js`
 - `src/App.jsx`
-- `src/features/admin/AdminModerationScreen.jsx`
+- `src/features/auth/LoginScreen.jsx`
+- `src/features/legal/LegalScreen.jsx`
 - `README.md`
 - `docs/beta-hardening-2026-09-11.md`
 
 O que foi feito:
 
-- Adicionado `ADMIN_EMAILS` como lista de e-mails autorizados para moderação.
-- Criado gate de moderador no backend antes de listar ou alterar denúncias.
-- Criada listagem de denúncias com filtros por status.
-- Criada atualização de status de denúncia.
-- Tela `/admin/moderation` criada no frontend, sem aparecer no menu público.
-- Tela mostra reporter, motivo, descrição, tipo de alvo, resumo do alvo e data.
-- Ações disponíveis: analisar, marcar ação tomada e descartar.
-- Testes unitários cobrem parser de admins e schemas de status/filtro.
+- Removido painel interno de moderacao criado na rodada anterior.
+- Removida dependencia de `ADMIN_EMAILS`.
+- Mantidos denuncia e bloqueio, que sao as protecoes importantes para beta.
+- Criadas paginas publicas de termos, privacidade e regras da comunidade.
+- Cadastro agora exige aceite dos textos antes de criar conta.
+- Login recebeu links para os textos legais.
 
 Validações:
 
@@ -769,4 +759,4 @@ Validações:
 
 Risco restante:
 
-- O painel ainda é operacionalmente simples. Ele não remove conteúdo, não suspende usuário e não envia notificação automática; isso é intencional para beta, porque ações destrutivas precisam de regras claras antes de ficarem a um clique.
+- Os textos legais ainda sao base inicial operacional. Antes de lancamento publico amplo, precisam de revisao juridica.
