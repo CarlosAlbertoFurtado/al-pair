@@ -96,9 +96,19 @@ function uploadToCloudinary(buffer: Buffer, options: ImageUploadOptions) {
   });
 }
 
-async function persistImage(buffer: Buffer, options: ImageUploadOptions) {
+type PersistedImage = {
+  url: string;
+  storage: 'cloudinary' | 'local';
+  cloudinaryAvailable: boolean;
+};
+
+async function persistImage(buffer: Buffer, options: ImageUploadOptions): Promise<PersistedImage> {
   if (!process.env.CLOUDINARY_URL) {
-    return saveLocally(buffer, options.folder);
+    return {
+      url: await saveLocally(buffer, options.folder),
+      storage: 'local',
+      cloudinaryAvailable: false,
+    };
   }
 
   try {
@@ -109,10 +119,22 @@ async function persistImage(buffer: Buffer, options: ImageUploadOptions) {
       throw new AppError('A foto de perfil precisa mostrar uma pessoa com o rosto visível.', 422);
     }
 
-    return result.secure_url;
+    return {
+      url: result.secure_url,
+      storage: 'cloudinary',
+      cloudinaryAvailable: true,
+    };
   } catch (error) {
     if (error instanceof AppError) throw error;
-    throw new AppError('Não foi possível armazenar a imagem agora. Verifique o Cloudinary e tente novamente.', 502);
+    console.error('[UPLOAD] Cloudinary failed; falling back to local upload.', {
+      message: error instanceof Error ? error.message : 'Unknown Cloudinary error',
+    });
+
+    return {
+      url: await saveLocally(buffer, options.folder),
+      storage: 'local',
+      cloudinaryAvailable: false,
+    };
   }
 }
 
@@ -130,15 +152,19 @@ async function handleImageUpload(req: Request, res: Response, options: ImageUplo
   assertFile(file, options.maxSizeMb);
 
   const normalized = await normalizeImage(file!.buffer, options);
-  const url = await persistImage(normalized, options);
-  const faceCheck = process.env.CLOUDINARY_URL
+  const persisted = await persistImage(normalized, options);
+  const faceCheck = persisted.cloudinaryAvailable
     ? (options.requireFace ? 'checked' : 'not_required')
     : 'unavailable';
 
   res.status(201).json({
     success: true,
     message: 'Upload realizado com sucesso.',
-    data: { url, faceCheck },
+    data: {
+      url: persisted.url,
+      storage: persisted.storage,
+      faceCheck,
+    },
   });
 }
 
