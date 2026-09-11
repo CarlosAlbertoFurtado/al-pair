@@ -110,6 +110,9 @@ app.use('/api/moderation', moderationRoutes);
 // Health Check
 app.get('/api/health', async (_req, res) => {
   const dbOk = await checkDatabaseHealth();
+  const mediaStorage = env.CLOUDINARY_URL
+    ? 'cloudinary_configured'
+    : (env.isProd ? 'missing_cloudinary_url' : 'local_dev_fallback');
 
   res.status(dbOk ? 200 : 503).json({
     success: dbOk,
@@ -118,7 +121,7 @@ app.get('/api/health', async (_req, res) => {
     environment: env.NODE_ENV,
     services: {
       database: dbOk ? 'connected' : 'disconnected',
-      mediaStorage: env.CLOUDINARY_URL ? 'cloudinary_configured' : 'local_fallback',
+      mediaStorage,
     },
   });
 });

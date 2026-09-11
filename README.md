@@ -30,7 +30,7 @@ Fora da beta por enquanto:
 - Node.js 20+
 - PostgreSQL
 - Redis opcional para WebSocket em escala
-- Cloudinary recomendado em producao para uploads e checagem de rosto em avatar
+- Cloudinary obrigatorio em producao para uploads persistentes e checagem de rosto em avatar
 
 ## Rodando localmente
 
@@ -60,7 +60,7 @@ Variaveis principais do backend:
 - `CORS_ORIGIN`
 - `PORT`
 - `REDIS_URL` opcional
-- `CLOUDINARY_URL` recomendado para fotos de perfil e imagens em posts
+- `CLOUDINARY_URL` obrigatorio no Render para fotos de perfil e imagens em posts
 - `FRONTEND_URL` URL publica do frontend, usada nos links de recuperacao de senha
 - `RESEND_API_KEY` para envio real de e-mail de recuperacao de senha
 - `EMAIL_FROM` remetente validado no provedor de e-mail
@@ -104,10 +104,11 @@ Frontend no Vercel:
 
 Uploads:
 
-- Posts aceitam JPEG, PNG e WEBP ate 8MB.
-- Avatar aceita JPEG, PNG e WEBP ate 3MB.
+- Posts aceitam JPEG, PNG, WEBP, HEIC e HEIF ate 8MB.
+- Avatar aceita JPEG, PNG, WEBP, HEIC e HEIF ate 3MB.
 - O frontend tenta detectar rosto no navegador antes do envio quando a API `FaceDetector` existe.
-- Em producao, configure `CLOUDINARY_URL` no Render para armazenar imagens fora do disco efemero e permitir validacao de rosto no backend.
+- Em producao, `CLOUDINARY_URL` precisa estar configurado no Render. Sem isso, o upload falha de proposito para evitar salvar imagens no disco efemero do Render, onde elas somem apos restart/redeploy.
+- Em desenvolvimento local, o backend ainda pode usar `UPLOAD_DIR` como fallback.
 - A beta inclui links de termos, privacidade e regras da comunidade no fluxo de cadastro.
 - Para recuperacao de senha funcionar em producao, configure `RESEND_API_KEY`, `EMAIL_FROM` e `FRONTEND_URL` no Render.
 

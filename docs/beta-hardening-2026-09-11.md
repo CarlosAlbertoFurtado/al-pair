@@ -425,7 +425,7 @@ Observacao:
 - Backups/PITR do Supabase precisam ser confirmados no painel.
 - Termos de uso, politica de privacidade e regras de comunidade ainda precisam ser escritos.
 - Chunk principal do frontend esta acima de 500 kB.
-- `CLOUDINARY_URL` precisa ser corrigido em producao. O app tem fallback local para destravar a beta, mas storage local no Render pode perder imagens apos restart/redeploy.
+- `CLOUDINARY_URL` precisa estar correto em producao. Storage local no Render e efemero e perde imagens apos restart/redeploy; por isso upload em producao agora falha se Cloudinary estiver ausente ou quebrado.
 
 ## Rodada complementar: denuncia, perfil e upload de fotos
 
@@ -559,7 +559,7 @@ Diagnostico:
 
 Isso indicava que `CLOUDINARY_URL` existia no ambiente do Render, mas o upload para Cloudinary estava falhando. Sem fallback, isso bloqueava foto de post e foto pelo perfil.
 
-O que mudou:
+O que mudou inicialmente:
 
 - Quando Cloudinary falha, o backend salva a imagem localmente como fallback.
 - A resposta informa `storage: 'cloudinary'` ou `storage: 'local'`.
@@ -568,6 +568,13 @@ O que mudou:
 Decisao de produto:
 
 Esse fallback destrava a beta, mas nao deve ser tratado como solucao final. Render tem filesystem efemero; imagens locais podem sumir apos restart/redeploy. Antes de beta com usuarios reais, o `CLOUDINARY_URL` deve ser corrigido ou trocado por Supabase Storage/R2/S3.
+
+Correcao posterior:
+
+- O fallback local foi removido para producao.
+- Em producao, se `CLOUDINARY_URL` estiver ausente, o upload responde erro claro pedindo configuracao do Cloudinary.
+- Em producao, se Cloudinary falhar, o upload nao salva localmente e responde erro claro para evitar fotos que somem depois.
+- O fallback local continua permitido apenas em desenvolvimento local.
 
 ## Validacao complementar executada
 
@@ -606,7 +613,7 @@ Tarefas:
 - Confirmar no Cloudinary se API key, API secret e cloud name estao corretos.
 - Fazer upload teste pelo endpoint `/api/upload/post-image`.
 - Se Cloudinary continuar instavel, migrar upload para Supabase Storage, Cloudflare R2 ou S3.
-- Remover dependencia de storage local para producao.
+- Confirmar que producao nao depende de storage local.
 
 Aceite:
 
@@ -750,7 +757,7 @@ Arquivos alterados:
 O que foi feito:
 
 - `CLOUDINARY_URL` passou a ser lido pelo `env.ts`, mantendo configuracao centralizada.
-- `/api/health` passou a indicar se o app esta usando `cloudinary_configured` ou `local_fallback` para mídia.
+- `/api/health` passou a indicar se o app esta usando `cloudinary_configured`, `missing_cloudinary_url` ou `local_dev_fallback` para midia.
 - Criado fluxo visual de "Esqueci minha senha".
 - Criada tela publica `/reset-password` para receber token por link.
 - Backend envia e-mail de redefinicao via Resend quando `RESEND_API_KEY` esta configurado.

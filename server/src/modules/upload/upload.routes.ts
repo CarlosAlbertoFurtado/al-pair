@@ -104,6 +104,10 @@ type PersistedImage = {
 
 async function persistImage(buffer: Buffer, options: ImageUploadOptions): Promise<PersistedImage> {
   if (!env.CLOUDINARY_URL) {
+    if (env.isProd) {
+      throw new AppError('Storage de imagens não configurado. Configure CLOUDINARY_URL no Render antes de enviar fotos.', 503);
+    }
+
     return {
       url: await saveLocally(buffer, options.folder),
       storage: 'local',
@@ -126,9 +130,13 @@ async function persistImage(buffer: Buffer, options: ImageUploadOptions): Promis
     };
   } catch (error) {
     if (error instanceof AppError) throw error;
-    console.error('[UPLOAD] Cloudinary failed; falling back to local upload.', {
+    console.error('[UPLOAD] Cloudinary failed.', {
       message: error instanceof Error ? error.message : 'Unknown Cloudinary error',
     });
+
+    if (env.isProd) {
+      throw new AppError('Não foi possível armazenar a imagem no Cloudinary. Verifique o CLOUDINARY_URL no Render.', 503);
+    }
 
     return {
       url: await saveLocally(buffer, options.folder),
