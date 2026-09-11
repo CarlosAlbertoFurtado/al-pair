@@ -61,6 +61,7 @@ Variaveis principais do backend:
 - `PORT`
 - `REDIS_URL` opcional
 - `CLOUDINARY_URL` recomendado para fotos de perfil e imagens em posts
+- `ADMIN_EMAILS` lista de e-mails separados por virgula que podem acessar `/admin/moderation`
 
 Variaveis principais do frontend:
 
@@ -105,6 +106,7 @@ Uploads:
 - Avatar aceita JPEG, PNG e WEBP ate 3MB.
 - O frontend tenta detectar rosto no navegador antes do envio quando a API `FaceDetector` existe.
 - Em producao, configure `CLOUDINARY_URL` no Render para armazenar imagens fora do disco efemero e permitir validacao de rosto no backend.
+- Para operar denuncias, configure `ADMIN_EMAILS` no Render e acesse `/admin/moderation` com uma conta cujo e-mail esteja nessa lista.
 
 ## Checklist antes de beta
 

@@ -17,6 +17,10 @@ function getEnv(key: string, fallback?: string): string {
   return value;
 }
 
+function getOptionalEnv(key: string, fallback = ''): string {
+  return process.env[key] ?? fallback;
+}
+
 export const env = {
   // Servidor
   NODE_ENV: getEnv('NODE_ENV', 'development'),
@@ -37,6 +41,9 @@ export const env = {
   // Uploads
   UPLOAD_DIR: getEnv('UPLOAD_DIR', './uploads'),
   MAX_FILE_SIZE_MB: parseInt(getEnv('MAX_FILE_SIZE_MB', '10'), 10),
+
+  // Admin/moderacao
+  ADMIN_EMAILS: getOptionalEnv('ADMIN_EMAILS'),
   
   // Helpers
   isDev: getEnv('NODE_ENV', 'development') === 'development',

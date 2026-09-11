@@ -636,16 +636,26 @@ Aceite:
 
 Prioridade: alta.
 
+Status: implementado nesta rodada.
+
 Tarefas:
 
-- Criar tela admin simples para listar denuncias abertas.
-- Permitir marcar denuncia como revisada.
-- Permitir ver alvo da denuncia: usuario, post ou mensagem.
-- Registrar data, reporter, motivo e descricao.
+- Criada tela admin simples para listar denuncias por status.
+- Criado controle de acesso por `ADMIN_EMAILS` no backend.
+- Criados endpoints `GET /api/moderation/reports` e `PATCH /api/moderation/reports/:id/status`.
+- Permitido marcar denuncia como `REVIEWING`, `ACTIONED` ou `DISMISSED`.
+- Incluido resumo do alvo da denuncia: usuario, post ou mensagem.
+- Exibidos data, reporter, motivo e descricao.
 
 Aceite:
 
-- Voce consegue operar denuncias sem acessar banco manualmente.
+- Voce consegue operar denuncias sem acessar banco manualmente usando `/admin/moderation`.
+
+Configuracao obrigatoria:
+
+- No Render, configure `ADMIN_EMAILS` com o e-mail da conta administradora.
+- Exemplo: `ADMIN_EMAILS=admin@seudominio.com,suporte@seudominio.com`.
+- Sem essa variavel, o painel responde com acesso negado por seguranca.
 
 ### 4. Politicas obrigatorias para beta
 
@@ -712,10 +722,51 @@ Aceite:
 
 ## Proximos passos recomendados
 
-1. Criar modal real de denuncia com motivo e descricao opcional.
-2. Criar toast/helper padrao para sucesso e erro.
-3. Adicionar testes de integracao para bloqueio: feed, busca, perfil e chat.
-4. Criar tela/painel minimo de moderacao para listar reports abertos.
-5. Implementar edicao basica de perfil.
-6. Confirmar deploy Render + Vercel com envs reais.
+1. Configurar `ADMIN_EMAILS` e `CLOUDINARY_URL` no Render.
+2. Fazer teste manual mobile completo apos deploy.
+3. Criar termos de uso, politica de privacidade e regras da comunidade.
+4. Integrar recuperacao de senha com e-mail real.
+5. Adicionar testes de integracao para bloqueio: feed, busca, perfil e chat.
+6. Criar e2e Playwright mobile do caminho principal.
 7. Validar Supabase backups/PITR e politica de retencao.
+
+## Rodada complementar: painel minimo de moderacao
+
+Commit previsto desta rodada:
+
+- `Add moderation review panel`
+
+Arquivos alterados:
+
+- `server/src/config/env.ts`
+- `server/.env.example`
+- `server/src/modules/moderation/moderation.routes.ts`
+- `server/src/modules/moderation/moderation.service.ts`
+- `server/src/modules/moderation/moderation.service.test.ts`
+- `src/api.js`
+- `src/App.jsx`
+- `src/features/admin/AdminModerationScreen.jsx`
+- `README.md`
+- `docs/beta-hardening-2026-09-11.md`
+
+O que foi feito:
+
+- Adicionado `ADMIN_EMAILS` como lista de e-mails autorizados para moderação.
+- Criado gate de moderador no backend antes de listar ou alterar denúncias.
+- Criada listagem de denúncias com filtros por status.
+- Criada atualização de status de denúncia.
+- Tela `/admin/moderation` criada no frontend, sem aparecer no menu público.
+- Tela mostra reporter, motivo, descrição, tipo de alvo, resumo do alvo e data.
+- Ações disponíveis: analisar, marcar ação tomada e descartar.
+- Testes unitários cobrem parser de admins e schemas de status/filtro.
+
+Validações:
+
+- `npm test -- --runInBand`
+- `npm run build`
+- `cd server && npm test`
+- `cd server && npm run build`
+
+Risco restante:
+
+- O painel ainda é operacionalmente simples. Ele não remove conteúdo, não suspende usuário e não envia notificação automática; isso é intencional para beta, porque ações destrutivas precisam de regras claras antes de ficarem a um clique.

@@ -169,6 +169,8 @@ export const emergencyAPI = {
 
 export const moderationAPI = {
   report: (data) => api.post('/moderation/report', data),
+  listReports: (params = {}) => api.get('/moderation/reports', { params }),
+  updateReportStatus: (id, status) => api.patch(`/moderation/reports/${id}/status`, { status }),
   block: (userId) => api.post(`/moderation/block/${userId}`),
   unblock: (userId) => api.delete(`/moderation/block/${userId}`),
 };
