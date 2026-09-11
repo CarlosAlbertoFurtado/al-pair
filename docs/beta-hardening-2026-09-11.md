@@ -583,6 +583,7 @@ Correcao de diagnostico:
 - Foi criada configuracao explicita em `server/src/config/cloudinary.ts`.
 - `CLOUDINARY_URL` agora e validado no formato `cloudinary://API_KEY:API_SECRET@CLOUD_NAME`.
 - Se o valor estiver com formato invalido, `/api/health` mostra `invalid_cloudinary_url`.
+- `/api/health/media` testa autenticação real no Cloudinary via ping seguro.
 - `render.yaml` passou a listar `CLOUDINARY_URL`, `FRONTEND_URL`, `RESEND_API_KEY` e `EMAIL_FROM` como variaveis esperadas.
 
 ## Validacao complementar executada
@@ -621,6 +622,7 @@ Tarefas:
 - Abrir o painel do Render e verificar o valor exato de `CLOUDINARY_URL`.
 - Garantir formato `cloudinary://API_KEY:API_SECRET@CLOUD_NAME`, sem aspas no Render.
 - Conferir `/api/health`; `mediaStorage` deve estar como `cloudinary_configured`.
+- Conferir `/api/health/media`; deve responder `cloudinary_ready`.
 - Confirmar no Cloudinary se API key, API secret e cloud name estao corretos.
 - Fazer upload teste pelo endpoint `/api/upload/post-image`.
 - Se Cloudinary continuar instavel, migrar upload para Supabase Storage, Cloudflare R2 ou S3.

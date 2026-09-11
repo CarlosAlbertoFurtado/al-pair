@@ -12,7 +12,7 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env.js';
 import { connectDatabase, checkDatabaseHealth } from './config/ensureDatabase.js';
-import { getMediaStorageHealth } from './config/cloudinary.js';
+import { cloudinary, getMediaStorageHealth } from './config/cloudinary.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import client from 'prom-client';
 // Collect default metrics (CPU, memory, event loop, etc.)
@@ -125,6 +125,45 @@ app.get('/api/health', async (_req, res) => {
       mediaStorageIssue: mediaStorage.reason,
     },
   });
+});
+
+app.get('/api/health/media', async (_req, res) => {
+  const mediaStorage = getMediaStorageHealth();
+
+  if (mediaStorage.status !== 'cloudinary_configured') {
+    res.status(503).json({
+      success: false,
+      message: 'Cloudinary não está configurado corretamente.',
+      services: {
+        mediaStorage: mediaStorage.status,
+        mediaStorageIssue: mediaStorage.reason,
+      },
+    });
+    return;
+  }
+
+  try {
+    await cloudinary.api.ping();
+
+    res.json({
+      success: true,
+      message: 'Cloudinary conectado e autenticado.',
+      services: {
+        mediaStorage: 'cloudinary_ready',
+        mediaStorageCloud: mediaStorage.cloudName,
+      },
+    });
+  } catch (error) {
+    console.error('[HEALTH] Cloudinary credential check failed.', error);
+    res.status(503).json({
+      success: false,
+      message: 'Cloudinary configurado, mas a autenticação falhou. Confira API key, API secret e cloud name no Render.',
+      services: {
+        mediaStorage: 'cloudinary_auth_failed',
+        mediaStorageCloud: mediaStorage.cloudName,
+      },
+    });
+  }
 });
 
 // Metrics endpoint for Prometheus
