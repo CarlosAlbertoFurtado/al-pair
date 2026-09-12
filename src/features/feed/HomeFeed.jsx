@@ -9,6 +9,7 @@ import { CommentsModal } from './CommentsModal';
 export function PostCard({ post }) {
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likeCount, setLikeCount] = useState(post._count?.likes || post.likesCount || 0);
+  const [commentCount, setCommentCount] = useState(post._count?.comments || post.commentsCount || 0);
   const [saved, setSaved] = useState(post.isBookmarked || false);
   const [showComments, setShowComments] = useState(false);
   const [showReport, setShowReport] = useState(false);
@@ -133,7 +134,7 @@ export function PostCard({ post }) {
           </button>
           <button onClick={() => setShowComments(true)} className="flex items-center gap-1 text-slate-400 hover:text-blue-400 transition-colors">
             <MessageSquare size={20} />
-            <span className="text-xs font-bold">{post._count?.comments || 0}</span>
+            <span className="text-xs font-bold">{commentCount}</span>
           </button>
           <button onClick={handleShare} className="text-slate-400 hover:text-green-400 transition-colors">
             <Share2 size={20} />
@@ -156,7 +157,11 @@ export function PostCard({ post }) {
       )}
       
       {showComments && (
-        <CommentsModal post={post} onClose={() => setShowComments(false)} />
+        <CommentsModal
+          post={post}
+          onClose={() => setShowComments(false)}
+          onCommentAdded={() => setCommentCount(prev => prev + 1)}
+        />
       )}
       {showReport && (
         <ReportModal

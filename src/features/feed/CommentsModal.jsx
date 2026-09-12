@@ -1,42 +1,46 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { X, Send } from 'lucide-react';
 import { postsAPI } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
-import { useAuthStore } from '../../store/useAuthStore';
 
-export function CommentsModal({ post, onClose }) {
+export function CommentsModal({ post, onClose, onCommentAdded }) {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const { user } = useAuthStore();
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchComments();
-  }, [post.id]);
-
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
+    setError('');
     try {
       const res = await postsAPI.getComments(post.id);
       setComments(res.data.data.comments || []);
     } catch (err) {
       console.error(err);
+      setError(err.response?.data?.message || 'Não foi possível carregar os comentários.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [post.id]);
+
+  useEffect(() => {
+    fetchComments();
+  }, [fetchComments]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!content.trim()) return;
 
+    setError('');
     setSubmitting(true);
     try {
-      const res = await postsAPI.addComment(post.id, content);
-      setComments([...comments, res.data.data.comment]);
+      const res = await postsAPI.addComment(post.id, content.trim());
+      setComments(prev => [...prev, res.data.data.comment]);
       setContent('');
+      onCommentAdded?.();
     } catch (err) {
       console.error(err);
+      setError(err.response?.data?.message || 'Não foi possível enviar o comentário.');
     } finally {
       setSubmitting(false);
     }
@@ -79,7 +83,7 @@ export function CommentsModal({ post, onClose }) {
               value={content}
               onChange={e => setContent(e.target.value)}
               placeholder="Adicione um comentário..."
-              className="flex-1 bg-slate-100 rounded-full px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="min-w-0 flex-1 rounded-full bg-white px-4 py-3 text-sm text-slate-950 placeholder:text-slate-400 ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500"
             />
             <button 
               type="submit" 
@@ -89,6 +93,11 @@ export function CommentsModal({ post, onClose }) {
               <Send size={18} className="ml-1" />
             </button>
           </form>
+          {error && (
+            <p className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">
+              {error}
+            </p>
+          )}
         </div>
       </div>
     </div>

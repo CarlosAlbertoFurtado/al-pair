@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { api, resolveAssetUrl, uploadAPI, usersAPI } from '../../api';
 import { hasVisibleFace, validatePhotoFile } from '../../utils/imageValidation';
+import { ImageAdjustModal } from '../../components/ImageAdjustModal';
 
 export default function Profile() {
   const { user, userRole, logout, updateUser } = useAuthStore();
@@ -13,6 +14,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState(null);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -63,6 +65,12 @@ export default function Profile() {
 
     setError('');
     setNotice('');
+    setSelectedAvatarFile(file);
+    event.target.value = '';
+  };
+
+  const uploadAdjustedAvatar = async (file) => {
+    setSelectedAvatarFile(null);
     setUploadingAvatar(true);
 
     try {
@@ -86,7 +94,6 @@ export default function Profile() {
       setError(err.response?.data?.message || 'Não foi possível enviar a foto de perfil.');
     } finally {
       setUploadingAvatar(false);
-      event.target.value = '';
     }
   };
 
@@ -287,6 +294,17 @@ export default function Profile() {
           Sair da Conta
         </button>
       </div>
+
+      {selectedAvatarFile && (
+        <ImageAdjustModal
+          file={selectedAvatarFile}
+          title="Ajustar foto de perfil"
+          aspectRatio={1}
+          roundedPreview
+          onCancel={() => setSelectedAvatarFile(null)}
+          onConfirm={uploadAdjustedAvatar}
+        />
+      )}
     </div>
   );
 }

@@ -37,9 +37,8 @@ export default function LoginScreen() {
   };
 
   const roles = [
-    { value: 'CANDIDATE', label: '🌍 Au Pair', desc: 'Quero ser au pair' },
-    { value: 'ALUMNI', label: '🎓 Ex Au Pair', desc: 'Já fui au pair' },
-    { value: 'MENTOR', label: '⭐ Mentora', desc: 'Quero ajudar au pairs' },
+    { value: 'CANDIDATE', icon: '🌍', label: 'Quero ser Au Pair', desc: 'Estou começando minha jornada' },
+    { value: 'ALUMNI', icon: '🎓', label: 'Au Pair / Ex Au Pair', desc: 'Já sou ou já fui au pair' },
   ];
 
   return (
@@ -72,20 +71,25 @@ export default function LoginScreen() {
             </div>
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-2">Eu sou...</label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 {roles.map(r => (
                   <button
                     type="button"
                     key={r.value}
                     onClick={() => setRole(r.value)}
-                    className={`p-2 rounded-xl text-center text-xs border transition-all ${
+                    className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
                       role === r.value
                         ? 'border-rose-400 bg-rose-50 text-rose-700 font-bold shadow-sm'
                         : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                     }`}
                   >
-                    <div className="text-lg mb-0.5">{r.label.split(' ')[0]}</div>
-                    <div className="font-bold">{r.label.split(' ').slice(1).join(' ')}</div>
+                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-xl shadow-sm">
+                      {r.icon}
+                    </span>
+                    <span>
+                      <span className="block text-sm font-black">{r.label}</span>
+                      <span className="block text-xs font-semibold opacity-70">{r.desc}</span>
+                    </span>
                   </button>
                 ))}
               </div>

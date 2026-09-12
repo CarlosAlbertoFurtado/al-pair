@@ -19,15 +19,15 @@ body {
 input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
 textarea,
 select {
-  color: #0f172a;
-  -webkit-text-fill-color: #0f172a;
-  caret-color: #0f172a;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  caret-color: #0f172a !important;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #94a3b8;
-  -webkit-text-fill-color: #94a3b8;
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
   opacity: 1;
 }
 
@@ -36,8 +36,8 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 textarea:-webkit-autofill,
 select:-webkit-autofill {
-  -webkit-text-fill-color: #0f172a;
-  caret-color: #0f172a;
+  -webkit-text-fill-color: #0f172a !important;
+  caret-color: #0f172a !important;
   transition: background-color 9999s ease-in-out 0s;
 }
 

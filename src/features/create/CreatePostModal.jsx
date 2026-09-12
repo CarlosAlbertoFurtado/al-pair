@@ -2,12 +2,14 @@ import { useState, useRef } from 'react';
 import { X, Image, Send, AlertTriangle } from 'lucide-react';
 import { postsAPI, uploadAPI } from '../../api';
 import { validatePhotoFile } from '../../utils/imageValidation';
+import { ImageAdjustModal } from '../../components/ImageAdjustModal';
 
 export default function CreatePostModal({ onClose, onSuccess }) {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef(null);
@@ -30,7 +32,14 @@ export default function CreatePostModal({ onClose, onSuccess }) {
     }
 
     setUploadError('');
-    setImagePreview(URL.createObjectURL(file));
+    setSelectedImageFile(file);
+    e.target.value = '';
+  };
+
+  const uploadAdjustedImage = async (file) => {
+    setSelectedImageFile(null);
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
     setUploadingImage(true);
 
     try {
@@ -45,8 +54,13 @@ export default function CreatePostModal({ onClose, onSuccess }) {
       setImageUrl(null);
     } finally {
       setUploadingImage(false);
-      e.target.value = '';
     }
+  };
+
+  const clearImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+    setImageUrl(null);
   };
 
   const handleSubmit = async (e) => {
@@ -178,7 +192,7 @@ export default function CreatePostModal({ onClose, onSuccess }) {
               {!uploadingImage && (
                 <button 
                   type="button" 
-                  onClick={() => { setImagePreview(null); setImageUrl(null); }}
+                  onClick={clearImage}
                   className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center text-xs hover:bg-black/70"
                 >
                   ✕
@@ -221,6 +235,15 @@ export default function CreatePostModal({ onClose, onSuccess }) {
           </div>
         </form>
       </div>
+      {selectedImageFile && (
+        <ImageAdjustModal
+          file={selectedImageFile}
+          title="Ajustar foto do post"
+          aspectRatio={16 / 9}
+          onCancel={() => setSelectedImageFile(null)}
+          onConfirm={uploadAdjustedImage}
+        />
+      )}
     </div>
   );
 }
