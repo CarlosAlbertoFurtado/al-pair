@@ -22,6 +22,7 @@ const EmergencyScreen = lazy(() => import('./features/emergency/EmergencyScreen'
 const MyPostsScreen = lazy(() => import('./features/profile/MyPostsScreen'));
 const UserProfileScreen = lazy(() => import('./features/profile/UserProfileScreen'));
 const LegalScreen = lazy(() => import('./features/legal/LegalScreen'));
+const MapScreen = lazy(() => import('./features/map/MapScreen'));
 
 export default function App() {
   const { checkAuth, isAuthenticated, isLoading } = useAuthStore();
@@ -64,6 +65,7 @@ export default function App() {
           <Route path="/journey" element={<JourneyScreen />} />
           <Route path="/emergency" element={<EmergencyScreen />} />
           <Route path="/my-posts" element={<MyPostsScreen />} />
+          <Route path="/map" element={<MapScreen />} />
           <Route path="/user/:id" element={<UserProfileScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

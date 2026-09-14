@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { chatAPI, moderationAPI, postsAPI, resolveAssetUrl, usersAPI } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { ReportModal } from '../../components/ReportModal';
+import { PhotoViewerModal } from '../../components/PhotoViewerModal';
 import { useAuthStore } from '../../store/useAuthStore';
 import { PostCard } from '../feed/HomeFeed';
 
@@ -28,6 +29,7 @@ export default function UserProfileScreen() {
   const [actionError, setActionError] = useState('');
   const [notice, setNotice] = useState('');
   const [showReport, setShowReport] = useState(false);
+  const [showPhotoViewer, setShowPhotoViewer] = useState(false);
   const lastPostRef = useRef(null);
 
   const isOwnProfile = viewer?.id === id;
@@ -201,9 +203,13 @@ export default function UserProfileScreen() {
         </div>
 
         <div className="px-5 pb-5 -mt-12 text-center">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-rose-400 to-purple-500 border-4 border-white shadow-sm mx-auto flex items-center justify-center text-white text-3xl font-black overflow-hidden">
+          <button 
+            type="button"
+            onClick={() => avatarUrl && setShowPhotoViewer(true)}
+            className="w-24 h-24 rounded-full bg-gradient-to-tr from-rose-400 to-purple-500 border-4 border-white shadow-sm mx-auto flex items-center justify-center text-white text-3xl font-black overflow-hidden active:scale-95 transition-transform"
+          >
             {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : profile.displayName[0].toUpperCase()}
-          </div>
+          </button>
           <h1 className="mt-3 text-xl font-black text-slate-900">{profile.displayName}</h1>
           <div className="mt-1 flex items-center justify-center gap-1 text-sm text-slate-500">
             <MapPin size={15} />
@@ -324,6 +330,9 @@ export default function UserProfileScreen() {
           onClose={() => setShowReport(false)}
           onSubmit={handleReport}
         />
+      )}
+      {showPhotoViewer && avatarUrl && (
+        <PhotoViewerModal src={avatarUrl} alt={profile.displayName} onClose={() => setShowPhotoViewer(false)} />
       )}
     </div>
   );

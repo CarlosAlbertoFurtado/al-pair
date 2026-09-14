@@ -1,8 +1,10 @@
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Home, Headphones, Plus, MessageCircle, User, Search, Bell, Menu, X, ChevronRight, Zap, ShoppingBag, MapPin, Users, Info, Settings, HelpCircle, Gift } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { notificationsAPI } from '../../api';
-import { useAuthStore } from '../../store/useAuthStore'; // Assumindo que a store de auth existe para pegar os dados do user, se não existir usaremos fallback
+import { notificationsAPI, resolveAssetUrl } from '../../api';
+import { useAuthStore } from '../../store/useAuthStore';
+import CreatePostModal from '../../features/create/CreatePostModal';
+import { PenSquare } from 'lucide-react';
 
 function NavItem({ to, icon: Icon, label, badge }) {
   return (
@@ -27,9 +29,6 @@ function NavItem({ to, icon: Icon, label, badge }) {
   );
 }
 
-import CreatePostModal from '../../features/create/CreatePostModal';
-import { PenSquare } from 'lucide-react';
-
 export default function MainLayout() {
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [activeModal, setActiveModal] = useState(null); // 'post' | null
@@ -37,7 +36,10 @@ export default function MainLayout() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuthStore(); // Pode vir undefined se não estiver configurado corretamente, faremos fallback
+  const { user } = useAuthStore();
+
+  // Resolver avatar URL corretamente
+  const avatarUrl = resolveAssetUrl(user?.avatarUrl);
 
   useEffect(() => {
     notificationsAPI.list()
@@ -50,19 +52,21 @@ export default function MainLayout() {
     setIsDrawerOpen(false);
   }, [location.pathname]);
 
-  const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
+  const toggleDrawer = () => setIsDrawerOpen(prev => !prev);
 
-  const DrawerLink = ({ icon: Icon, label, to }) => (
-    <button onClick={() => navigate(to)} className="flex items-center gap-4 w-full p-3 text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-xl transition-colors active:scale-95">
+  const DrawerLink = ({ icon: Icon, label, to, badge }) => (
+    <button onClick={() => { setIsDrawerOpen(false); navigate(to); }} className="flex items-center gap-4 w-full p-3 text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-xl transition-colors active:scale-95">
       <Icon size={22} className="text-slate-400" />
-      <span className="text-sm font-semibold">{label}</span>
+      <span className="text-sm font-semibold flex-1 text-left">{label}</span>
+      {badge && <span className="bg-rose-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{badge}</span>}
+      <ChevronRight size={16} className="text-slate-600" />
     </button>
   );
 
   return (
     <div className="w-full max-w-[430px] mx-auto h-screen bg-white relative overflow-hidden flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.05)]">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 bg-white/90 backdrop-blur-md border-b border-rose-100 z-10 sticky top-0">
+      <header className="flex items-center justify-between px-4 py-3 bg-white/90 backdrop-blur-md border-b border-rose-100 z-30 sticky top-0">
         <div className="flex items-center gap-3">
           <button onClick={toggleDrawer} className="p-2 -ml-2 rounded-full hover:bg-rose-50 transition-colors text-slate-700 active:scale-90">
             <Menu size={24} />
@@ -87,20 +91,20 @@ export default function MainLayout() {
       {/* Drawer Overlay */}
       {isDrawerOpen && (
         <div 
-          className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-40 animate-in fade-in duration-200"
+          className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[60] animate-in fade-in duration-200"
           onClick={() => setIsDrawerOpen(false)}
         />
       )}
 
-      {/* Drawer Menu */}
-      <div className={`fixed top-0 left-0 h-full w-[85%] max-w-[320px] bg-slate-900 z-50 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out transform ${isDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        {/* Drawer Header (Premium Look) */}
+      {/* Drawer Menu - z-index mais alto que tudo */}
+      <div className={`fixed top-0 left-0 h-full w-[85%] max-w-[320px] bg-slate-900 z-[70] shadow-2xl flex flex-col transition-transform duration-300 ease-in-out transform ${isDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        {/* Drawer Header */}
         <div className="bg-gradient-to-b from-slate-800 to-slate-900 p-6 pt-10 border-b border-slate-800">
           <div className="flex justify-between items-start mb-4">
             <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-rose-500 to-purple-600 p-[2px]">
               <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center overflow-hidden">
-                {user?.profilePictureUrl ? (
-                  <img src={user.profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
                   <User size={28} className="text-slate-400" />
                 )}
@@ -135,14 +139,14 @@ export default function MainLayout() {
         <div className="flex-1 overflow-y-auto p-4 space-y-1">
           <DrawerLink to="/" icon={Home} label="Início" />
           <DrawerLink to="/rooms" icon={Users} label="Comunidade" />
-          <DrawerLink to="/notifications" icon={Bell} label="Notificações" />
-          <DrawerLink to="/" icon={MapPin} label="Mapa (Em breve)" />
-          <DrawerLink to="/" icon={Info} label="Biblioteca" />
+          <DrawerLink to="/notifications" icon={Bell} label="Notificações" badge={unreadCount > 0 ? unreadCount : undefined} />
+          <DrawerLink to="/map" icon={MapPin} label="Radar Au Pairs" />
+          <DrawerLink to="/journey" icon={Info} label="Minha Jornada" />
           
           <div className="h-px bg-slate-800 my-4 mx-2"></div>
           
-          <DrawerLink to="/" icon={Zap} label="Serviços" />
-          <DrawerLink to="/" icon={ShoppingBag} label="Grupão Shop" />
+          <DrawerLink to="/emergency" icon={Zap} label="SOS & Emergências" />
+          <DrawerLink to="/search" icon={Search} label="Buscar Pessoas" />
           <DrawerLink to="/" icon={Gift} label="Indique e Ganhe" />
           <DrawerLink to="/profile" icon={Settings} label="Configurações" />
         </div>
@@ -205,7 +209,6 @@ export default function MainLayout() {
           onClose={() => setActiveModal(null)} 
           onSuccess={() => {
             setActiveModal(null);
-            // In a real app we'd refresh the feed here or use global state
             window.location.reload(); 
           }} 
         />

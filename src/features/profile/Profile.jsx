@@ -6,6 +6,7 @@ import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { api, resolveAssetUrl, uploadAPI, usersAPI } from '../../api';
 import { hasVisibleFace, validatePhotoFile } from '../../utils/imageValidation';
 import { ImageAdjustModal } from '../../components/ImageAdjustModal';
+import { PhotoViewerModal } from '../../components/PhotoViewerModal';
 
 export default function Profile() {
   const { user, userRole, logout, updateUser } = useAuthStore();
@@ -17,6 +18,7 @@ export default function Profile() {
   const [selectedAvatarFile, setSelectedAvatarFile] = useState(null);
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+  const [showPhotoViewer, setShowPhotoViewer] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -158,11 +160,17 @@ export default function Profile() {
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
         <div className="flex items-center gap-4 mb-4">
           <label className="relative w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl font-bold border-2 border-white/30 overflow-hidden shrink-0 cursor-pointer">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
-            ) : (
-              (form.displayName || user?.displayName || 'U')[0].toUpperCase()
-            )}
+            <button
+              type="button"
+              onClick={(e) => { if (avatarUrl) { e.preventDefault(); setShowPhotoViewer(true); }}}
+              className="w-full h-full flex items-center justify-center"
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                (form.displayName || user?.displayName || 'U')[0].toUpperCase()
+              )}
+            </button>
             <span className="absolute inset-x-0 bottom-0 h-7 bg-black/45 flex items-center justify-center">
               <Camera size={16} />
             </span>
@@ -304,6 +312,10 @@ export default function Profile() {
           onCancel={() => setSelectedAvatarFile(null)}
           onConfirm={uploadAdjustedAvatar}
         />
+      )}
+
+      {showPhotoViewer && avatarUrl && (
+        <PhotoViewerModal src={avatarUrl} alt={form.displayName || 'Meu perfil'} onClose={() => setShowPhotoViewer(false)} />
       )}
     </div>
   );
