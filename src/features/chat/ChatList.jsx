@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowLeft, MessageSquare, Send, X, Copy, Pin, Reply, Image, Mic, MicOff, Camera, Pencil, Trash2, Check, CheckCheck } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Send, X, Copy, Pin, Reply, Image, Mic, Camera, Pencil, Trash2, Check, CheckCheck } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { chatAPI, getSocket, resolveAssetUrl, uploadAPI } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
@@ -7,8 +7,9 @@ import { useAuthStore } from '../../store/useAuthStore';
 
 const REACTION_EMOJIS = ['❤️', '😂', '😮', '😢', '😡', '👍'];
 
-function ChatConversation({ conversation, onBack }) {
+function ChatConversation({ conversation, onBack, initialUnreadCount = 0, onRead }) {
   const [messages, setMessages] = useState([]);
+  const [highlightedUnreadIds, setHighlightedUnreadIds] = useState(new Set());
   const [newMsg, setNewMsg] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeReactionMsgId, setActiveReactionMsgId] = useState(null);
@@ -29,6 +30,7 @@ function ChatConversation({ conversation, onBack }) {
   const recordingIntervalRef = useRef(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+  const initialUnreadCountRef = useRef(initialUnreadCount);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
@@ -37,8 +39,19 @@ function ChatConversation({ conversation, onBack }) {
   useEffect(() => {
     chatAPI.getMessages(conversation.id)
       .then(res => {
-        setMessages(res.data.data.messages || []);
+        const loadedMessages = res.data.data.messages || [];
+        setMessages(loadedMessages);
+        if (initialUnreadCountRef.current > 0) {
+          const unreadIncomingIds = loadedMessages
+            .filter(msg => (msg.senderId || msg.sender?.id) !== user?.id)
+            .slice(-initialUnreadCountRef.current)
+            .map(msg => msg.id);
+          setHighlightedUnreadIds(new Set(unreadIncomingIds));
+        } else {
+          setHighlightedUnreadIds(new Set());
+        }
         setLoading(false);
+        onRead?.(conversation.id);
         scrollToBottom();
       })
       .catch(() => setLoading(false));
@@ -52,8 +65,13 @@ function ChatConversation({ conversation, onBack }) {
       socket.on('message:new', (data) => {
         if (data.conversationId === conversation.id) {
           setMessages(prev => [...prev, data.message]);
+          const senderId = data.message?.senderId || data.message?.sender?.id;
+          if (senderId !== user?.id) {
+            setHighlightedUnreadIds(prev => new Set([...prev, data.message.id]));
+          }
           scrollToBottom();
           socket.emit('messages:read', { conversationId: conversation.id });
+          onRead?.(conversation.id);
         }
       });
 
@@ -75,7 +93,7 @@ function ChatConversation({ conversation, onBack }) {
         socket.off('messages:read');
       };
     }
-  }, [conversation.id, socket, user?.id, scrollToBottom]);
+  }, [conversation.id, onRead, socket, user?.id, scrollToBottom]);
 
   // Typing indicator
   const handleTyping = () => {
@@ -247,6 +265,7 @@ function ChatConversation({ conversation, onBack }) {
           messages.map(msg => {
             const isMine = (msg.senderId || msg.sender?.id) === user?.id;
             const msgImageUrl = resolveAssetUrl(msg.imageUrl);
+            const isUnreadHighlight = !isMine && highlightedUnreadIds.has(msg.id);
             return (
               <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'} relative`}>
                 <div 
@@ -304,12 +323,16 @@ function ChatConversation({ conversation, onBack }) {
                       )}
                       {/* Message Bubble */}
                       <div className={`px-4 py-2.5 rounded-2xl text-sm shadow-sm ${
-                        isMine ? 'bg-gradient-to-r from-purple-600 to-rose-500 text-white rounded-br-sm' : 'bg-slate-800 text-slate-100 rounded-bl-sm border border-slate-700'
+                        isMine
+                          ? 'bg-gradient-to-r from-purple-600 to-rose-500 text-white rounded-br-sm'
+                          : isUnreadHighlight
+                            ? 'bg-emerald-500 text-white rounded-bl-sm border border-emerald-300 shadow-emerald-500/30'
+                            : 'bg-slate-800 text-slate-100 rounded-bl-sm border border-slate-700'
                       }`}>
                         {msg.content}
                         <div className={`flex items-center gap-1 mt-1 ${isMine ? 'justify-end' : ''}`}>
                           {msg.isEdited && <span className="text-[9px] opacity-50">editado</span>}
-                          <span className={`text-[10px] ${isMine ? 'text-white/50' : 'text-slate-500'}`}>
+                          <span className={`text-[10px] ${isMine || isUnreadHighlight ? 'text-white/60' : 'text-slate-500'}`}>
                             {new Date(msg.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                           {isMine && (
@@ -414,6 +437,15 @@ export default function ChatList() {
   const { user } = useAuthStore();
   const location = useLocation();
 
+  const markConversationRead = useCallback((conversationId) => {
+    setConversations(prev => prev.map(conv => (
+      conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv
+    )));
+    setActiveConv(prev => (
+      prev?.id === conversationId ? { ...prev, unreadCount: 0 } : prev
+    ));
+  }, []);
+
   useEffect(() => {
     chatAPI.getConversations()
       .then(res => {
@@ -452,14 +484,19 @@ export default function ChatList() {
             const otherUser = conv.otherParticipants?.[0] || conv.users?.find(u => u.userId !== user?.id)?.user;
             const otherAvatarUrl = resolveAssetUrl(otherUser?.avatarUrl);
             const isOnline = otherUser?.isOnline ?? false;
+            const hasUnread = (conv.unreadCount || 0) > 0;
             return (
               <button
                 key={conv.id}
                 onClick={() => setActiveConv(conv)}
-                className="flex items-center gap-3 w-full px-4 py-3.5 hover:bg-slate-50 transition-colors border-b border-slate-50 active:bg-slate-100"
+                className={`flex items-center gap-3 w-full px-4 py-3.5 transition-colors border-b active:bg-slate-100 ${
+                  hasUnread
+                    ? 'bg-emerald-50 border-emerald-100 hover:bg-emerald-100/70'
+                    : 'border-slate-50 hover:bg-slate-50'
+                }`}
               >
                 <div className="relative shrink-0">
-                  <div className="w-13 h-13 rounded-full bg-gradient-to-tr from-rose-400 to-purple-500 flex items-center justify-center text-white font-bold overflow-hidden" style={{width: '52px', height: '52px'}}>
+                  <div className={`w-13 h-13 rounded-full flex items-center justify-center text-white font-bold overflow-hidden ${hasUnread ? 'bg-gradient-to-tr from-emerald-400 to-teal-500 ring-2 ring-emerald-300 ring-offset-2 ring-offset-white' : 'bg-gradient-to-tr from-rose-400 to-purple-500'}`} style={{width: '52px', height: '52px'}}>
                     {otherAvatarUrl ? (
                       <img src={otherAvatarUrl} alt="" className="w-full h-full object-cover" />
                     ) : (
@@ -469,17 +506,17 @@ export default function ChatList() {
                   <span className={`absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-white rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-slate-300'}`}></span>
                 </div>
                 <div className="flex-1 text-left min-w-0">
-                  <p className="text-sm font-bold text-slate-900 truncate">{otherUser?.displayName || 'Usuário'}</p>
-                  <p className="text-xs text-slate-400 truncate">{conv.lastMessagePreview || conv.lastMessage?.content || 'Envie uma mensagem'}</p>
+                  <p className={`text-sm font-bold truncate ${hasUnread ? 'text-emerald-800' : 'text-slate-900'}`}>{otherUser?.displayName || 'Usuário'}</p>
+                  <p className={`text-xs truncate ${hasUnread ? 'text-emerald-700 font-semibold' : 'text-slate-400'}`}>{conv.lastMessagePreview || conv.lastMessage?.content || 'Envie uma mensagem'}</p>
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   {(conv.lastMessageAt || conv.lastMessage?.createdAt) && (
-                    <span className="text-[10px] text-slate-400">
+                    <span className={`text-[10px] ${hasUnread ? 'text-emerald-600 font-bold' : 'text-slate-400'}`}>
                       {new Date(conv.lastMessageAt || conv.lastMessage.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   )}
-                  {conv.unreadCount > 0 && (
-                    <span className="bg-rose-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">{conv.unreadCount}</span>
+                  {hasUnread && (
+                    <span className="bg-emerald-500 text-white text-[9px] font-black min-w-5 h-5 px-1.5 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/30">{conv.unreadCount}</span>
                   )}
                 </div>
               </button>
@@ -490,7 +527,12 @@ export default function ChatList() {
 
       {/* Conversa como overlay fixo - NÃO afeta o MainLayout header */}
       {activeConv && (
-        <ChatConversation conversation={activeConv} onBack={() => setActiveConv(null)} />
+        <ChatConversation
+          conversation={activeConv}
+          initialUnreadCount={activeConv.unreadCount || 0}
+          onRead={markConversationRead}
+          onBack={() => setActiveConv(null)}
+        />
       )}
     </div>
   );

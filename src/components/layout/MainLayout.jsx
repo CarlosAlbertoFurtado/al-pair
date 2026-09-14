@@ -1,12 +1,14 @@
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { Home, Headphones, Plus, MessageCircle, User, Search, Bell, Menu, X, ChevronRight, Zap, ShoppingBag, MapPin, Users, Info, Settings, HelpCircle, Gift } from 'lucide-react';
+import { Home, Headphones, Plus, MessageCircle, User, Search, Bell, Menu, X, ChevronRight, Zap, MapPin, Users, Info, Settings, Gift } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { notificationsAPI, resolveAssetUrl } from '../../api';
+import { chatAPI, getSocket, notificationsAPI, resolveAssetUrl } from '../../api';
 import { useAuthStore } from '../../store/useAuthStore';
 import CreatePostModal from '../../features/create/CreatePostModal';
 import { PenSquare } from 'lucide-react';
 
-function NavItem({ to, icon: Icon, label, badge }) {
+function NavItem({ to, icon: Icon, label, badge, badgeTone = 'rose' }) {
+  const badgeClass = badgeTone === 'green' ? 'bg-emerald-500' : 'bg-rose-500';
+
   return (
     <NavLink
       to={to}
@@ -21,7 +23,7 @@ function NavItem({ to, icon: Icon, label, badge }) {
       <Icon size={24} strokeWidth={1.8} />
       <span className="text-[10px] font-semibold">{label}</span>
       {badge && (
-        <span className="absolute -top-1 -right-0.5 bg-rose-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none">
+        <span className={`absolute -top-1 -right-0.5 ${badgeClass} text-white text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none shadow-lg ${badgeTone === 'green' ? 'shadow-emerald-500/30 animate-pulse' : ''}`}>
           {badge}
         </span>
       )}
@@ -33,6 +35,7 @@ export default function MainLayout() {
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [activeModal, setActiveModal] = useState(null); // 'post' | null
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -47,6 +50,43 @@ export default function MainLayout() {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+
+    const refreshUnreadChats = async () => {
+      try {
+        const res = await chatAPI.getConversations();
+        if (!mounted) return;
+        const total = (res.data.data.conversations || [])
+          .reduce((sum, conv) => sum + (conv.unreadCount || 0), 0);
+        setUnreadChatCount(total);
+      } catch {}
+    };
+
+    refreshUnreadChats();
+    const socket = getSocket();
+    const handleNewMessage = (data) => {
+      const senderId = data?.message?.sender?.id || data?.message?.senderId;
+      if (senderId === user?.id) return;
+      if (!location.pathname.startsWith('/chat')) {
+        setUnreadChatCount(prev => prev + 1);
+      }
+      setTimeout(refreshUnreadChats, 300);
+    };
+    const handleRead = () => setTimeout(refreshUnreadChats, 200);
+
+    socket?.on('message:new', handleNewMessage);
+    socket?.on('messages:read', handleRead);
+    window.addEventListener('focus', refreshUnreadChats);
+
+    return () => {
+      mounted = false;
+      socket?.off('message:new', handleNewMessage);
+      socket?.off('messages:read', handleRead);
+      window.removeEventListener('focus', refreshUnreadChats);
+    };
+  }, [location.pathname, user?.id]);
+
   // Fechar o drawer ao mudar de rota
   useEffect(() => {
     setIsDrawerOpen(false);
@@ -54,11 +94,11 @@ export default function MainLayout() {
 
   const toggleDrawer = () => setIsDrawerOpen(prev => !prev);
 
-  const DrawerLink = ({ icon: Icon, label, to, badge }) => (
+  const DrawerLink = ({ icon: Icon, label, to, badge, badgeTone = 'rose' }) => (
     <button onClick={() => { setIsDrawerOpen(false); navigate(to); }} className="flex items-center gap-4 w-full p-3 text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-xl transition-colors active:scale-95">
       <Icon size={22} className="text-slate-400" />
       <span className="text-sm font-semibold flex-1 text-left">{label}</span>
-      {badge && <span className="bg-rose-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{badge}</span>}
+      {badge && <span className={`${badgeTone === 'green' ? 'bg-emerald-500' : 'bg-rose-500'} text-white text-[9px] font-black px-2 py-0.5 rounded-full`}>{badge}</span>}
       <ChevronRight size={16} className="text-slate-600" />
     </button>
   );
@@ -140,6 +180,7 @@ export default function MainLayout() {
           <DrawerLink to="/" icon={Home} label="Início" />
           <DrawerLink to="/rooms" icon={Users} label="Comunidade" />
           <DrawerLink to="/notifications" icon={Bell} label="Notificações" badge={unreadCount > 0 ? unreadCount : undefined} />
+          <DrawerLink to="/chat" icon={MessageCircle} label="Chat" badge={unreadChatCount > 0 ? unreadChatCount : undefined} badgeTone="green" />
           <DrawerLink to="/map" icon={MapPin} label="Radar Au Pairs" />
           <DrawerLink to="/journey" icon={Info} label="Minha Jornada" />
           
@@ -173,7 +214,7 @@ export default function MainLayout() {
           <Plus size={28} />
         </button>
 
-        <NavItem to="/chat" icon={MessageCircle} label="Chat" />
+        <NavItem to="/chat" icon={MessageCircle} label="Chat" badge={unreadChatCount > 0 ? unreadChatCount : undefined} badgeTone="green" />
         <NavItem to="/profile" icon={User} label="Perfil" />
       </nav>
 

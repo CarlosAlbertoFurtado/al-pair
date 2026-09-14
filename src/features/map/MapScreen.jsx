@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { MapPin, MessageCircle, UserPlus, X, Loader2, Navigation, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
+import L from 'leaflet';
 import { usersAPI, chatAPI, resolveAssetUrl } from '../../api';
 import { useAuthStore } from '../../store/useAuthStore';
 
@@ -15,6 +17,51 @@ function getDistanceKm(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function createMarkerIcon({ avatarUrl, label, isCurrentUser = false, isOnline = false }) {
+  const safeLabel = escapeHtml(label || 'U');
+  const safeAvatarUrl = escapeHtml(avatarUrl || '');
+  const initial = safeLabel[0].toUpperCase();
+  const avatar = avatarUrl
+    ? `<img src="${safeAvatarUrl}" alt="" class="apc-map-marker-img" />`
+    : `<span class="apc-map-marker-initial">${initial}</span>`;
+  const status = isCurrentUser ? '' : `<span class="apc-map-status ${isOnline ? 'is-online' : ''}"></span>`;
+
+  return L.divIcon({
+    className: '',
+    html: `
+      <div class="apc-map-marker ${isCurrentUser ? 'is-current' : ''}">
+        ${avatar}
+        ${status}
+      </div>
+    `,
+    iconSize: [44, 52],
+    iconAnchor: [22, 50],
+    popupAnchor: [0, -46],
+  });
+}
+
+function FlyToLocation({ location }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!location) return;
+    map.flyTo([location.lat, location.lng], 12, {
+      animate: true,
+      duration: 1.3,
+    });
+  }, [location, map]);
+
+  return null;
+}
+
 export default function MapScreen() {
   const [nearbyUsers, setNearbyUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,6 +71,13 @@ export default function MapScreen() {
   const [locationError, setLocationError] = useState('');
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const mapCenter = userLocation ? [userLocation.lat, userLocation.lng] : [20, 0];
+  const mapZoom = userLocation ? 12 : 2;
+  const currentUserIcon = useMemo(() => createMarkerIcon({
+    avatarUrl: resolveAssetUrl(user?.avatarUrl),
+    label: user?.displayName || 'Você',
+    isCurrentUser: true,
+  }), [user?.avatarUrl, user?.displayName]);
 
   const fetchNearby = useCallback(async (lat, lng) => {
     try {
@@ -122,16 +176,6 @@ export default function MapScreen() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px]">
-          <div className="absolute inset-0 rounded-full border border-purple-500/10 animate-ping" style={{animationDuration: '4s'}}></div>
-          <div className="absolute inset-[60px] rounded-full border border-rose-500/10 animate-ping" style={{animationDuration: '3s', animationDelay: '0.5s'}}></div>
-          <div className="absolute inset-[120px] rounded-full border border-purple-500/15 animate-ping" style={{animationDuration: '3.5s', animationDelay: '1s'}}></div>
-          <div className="absolute inset-[180px] rounded-full border border-rose-500/20 animate-pulse" style={{animationDuration: '2s'}}></div>
-        </div>
-      </div>
-
       {/* Header */}
       <div className="relative z-10 px-5 pt-6 pb-4">
         <div className="flex items-center justify-between">
@@ -165,7 +209,7 @@ export default function MapScreen() {
 
       {/* Scanning State */}
       {scanning && (
-        <div className="relative z-10 flex flex-col items-center justify-center py-20">
+        <div className="relative z-10 flex flex-col items-center justify-center py-8">
           <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-rose-500/20 to-purple-600/20 flex items-center justify-center animate-pulse">
             <Loader2 size={32} className="text-purple-400 animate-spin" />
           </div>
@@ -173,6 +217,62 @@ export default function MapScreen() {
           <p className="text-slate-500 text-sm mt-2">Escaneando sua região</p>
         </div>
       )}
+
+      {/* Real World Map */}
+      <div className="relative z-10 mx-4 mb-5 overflow-hidden rounded-3xl border border-slate-700/60 bg-slate-900 shadow-2xl">
+        <div className="h-[340px] w-full">
+          <MapContainer
+            center={mapCenter}
+            zoom={mapZoom}
+            minZoom={2}
+            maxZoom={18}
+            scrollWheelZoom
+            className="h-full w-full"
+            worldCopyJump
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <FlyToLocation location={userLocation} />
+            {userLocation && (
+              <Marker position={[userLocation.lat, userLocation.lng]} icon={currentUserIcon}>
+                <Popup>
+                  <strong>Você está aqui</strong>
+                  <br />
+                  Radar centralizado na sua localização.
+                </Popup>
+              </Marker>
+            )}
+            {nearbyUsers
+              .filter(u => Number.isFinite(Number(u.latitude)) && Number.isFinite(Number(u.longitude)))
+              .map((u) => {
+                const avatar = resolveAssetUrl(u.avatarUrl);
+                const icon = createMarkerIcon({
+                  avatarUrl: avatar,
+                  label: u.displayName,
+                  isOnline: u.isOnline,
+                });
+
+                return (
+                  <Marker key={u.id} position={[Number(u.latitude), Number(u.longitude)]} icon={icon}>
+                    <Popup>
+                      <div className="min-w-[150px]">
+                        <strong>{u.displayName}</strong>
+                        <p className="m-0 text-xs">
+                          {u.distance != null ? `Aprox. ${u.distance} km de você` : (u.city || 'Localização informada')}
+                        </p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              })}
+          </MapContainer>
+        </div>
+        <div className="absolute left-4 top-4 z-[500] rounded-2xl bg-slate-950/80 px-3 py-2 text-xs font-bold text-white shadow-lg backdrop-blur-md">
+          {userLocation ? 'Mapa aproximado na sua posição' : 'Mapa mundial aguardando GPS'}
+        </div>
+      </div>
 
       {/* Results */}
       {!scanning && (

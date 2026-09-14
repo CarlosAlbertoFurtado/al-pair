@@ -55,6 +55,85 @@ select:-webkit-autofill {
 
 ::-webkit-scrollbar { width: 0; height: 0; }
 
+.leaflet-container {
+  font-family: var(--font-sans);
+}
+
+.leaflet-control-attribution {
+  font-size: 9px;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+}
+
+.leaflet-popup-content {
+  color: #0f172a;
+  margin: 10px 12px;
+}
+
+.apc-map-marker {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  border: 3px solid #ffffff;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fb7185, #8b5cf6);
+  box-shadow: 0 14px 26px rgba(15, 23, 42, 0.35);
+}
+
+.apc-map-marker::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  transform: translateX(-50%) rotate(45deg);
+  border-right: 3px solid #ffffff;
+  border-bottom: 3px solid #ffffff;
+  border-radius: 2px;
+  background: inherit;
+  z-index: -1;
+}
+
+.apc-map-marker.is-current {
+  background: linear-gradient(135deg, #10b981, #14b8a6);
+  box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.18), 0 14px 26px rgba(15, 23, 42, 0.35);
+}
+
+.apc-map-marker-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.apc-map-marker-initial {
+  color: white;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.apc-map-status {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 13px;
+  height: 13px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: #64748b;
+}
+
+.apc-map-status.is-online {
+  background: #10b981;
+}
+
 @keyframes slideUp {
   from { transform: translateY(100%); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
