@@ -159,11 +159,15 @@ export default function Profile() {
       <div className="bg-gradient-to-br from-rose-500 via-purple-500 to-indigo-600 p-6 pb-8 text-white relative overflow-hidden">
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
         <div className="flex items-center gap-4 mb-4">
-          <label className="relative w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl font-bold border-2 border-white/30 overflow-hidden shrink-0 cursor-pointer">
+          <div className="relative w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl font-bold border-2 border-white/30 shrink-0">
             <button
               type="button"
-              onClick={(e) => { if (avatarUrl) { e.preventDefault(); setShowPhotoViewer(true); }}}
-              className="w-full h-full flex items-center justify-center"
+              onClick={() => {
+                if (avatarUrl) setShowPhotoViewer(true);
+              }}
+              disabled={!avatarUrl}
+              className="w-full h-full rounded-full overflow-hidden flex items-center justify-center disabled:cursor-default active:scale-95 transition-transform"
+              aria-label={avatarUrl ? 'Ampliar foto de perfil' : 'Foto de perfil'}
             >
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
@@ -171,17 +175,22 @@ export default function Profile() {
                 (form.displayName || user?.displayName || 'U')[0].toUpperCase()
               )}
             </button>
-            <span className="absolute inset-x-0 bottom-0 h-7 bg-black/45 flex items-center justify-center">
+            <label
+              htmlFor="profile-avatar-input"
+              className={`absolute -bottom-1 -right-1 h-9 w-9 rounded-full border-2 border-white bg-slate-950/80 flex items-center justify-center shadow-lg active:scale-90 transition-transform ${uploadingAvatar || saving ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+              aria-label="Trocar foto de perfil"
+            >
               <Camera size={16} />
-            </span>
+            </label>
             <input
+              id="profile-avatar-input"
               type="file"
               accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
               className="hidden"
               onChange={handleAvatarSelect}
               disabled={uploadingAvatar || saving}
             />
-          </label>
+          </div>
           <div className="flex-1">
             <h2 className="text-xl font-bold">{form.displayName || user?.displayName || 'Usuário'}</h2>
             <p className="text-white/70 text-sm">{user?.email}</p>
@@ -212,14 +221,23 @@ export default function Profile() {
       <form onSubmit={handleSaveProfile} className="mt-4 mx-4 bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <h3 className="text-sm font-black text-slate-800">Editar perfil</h3>
-          <button
-            type="submit"
-            disabled={saving || uploadingAvatar || !form.displayName.trim()}
-            className="h-9 px-3 rounded-xl bg-slate-900 text-white text-xs font-bold flex items-center gap-2 disabled:opacity-50"
-          >
-            <Save size={15} />
-            {saving ? 'Salvando...' : 'Salvar'}
-          </button>
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="profile-avatar-input"
+              className={`h-9 px-3 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-2 active:scale-95 transition-transform ${saving || uploadingAvatar ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
+            >
+              <Camera size={15} />
+              Foto
+            </label>
+            <button
+              type="submit"
+              disabled={saving || uploadingAvatar || !form.displayName.trim()}
+              className="h-9 px-3 rounded-xl bg-slate-900 text-white text-xs font-bold flex items-center gap-2 disabled:opacity-50"
+            >
+              <Save size={15} />
+              {saving ? 'Salvando...' : 'Salvar'}
+            </button>
+          </div>
         </div>
 
         <div>

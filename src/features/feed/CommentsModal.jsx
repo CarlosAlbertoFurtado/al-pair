@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
-import { X, Send, Heart, Reply, Trash2 } from 'lucide-react';
+import { X, Send, MessageCircle } from 'lucide-react';
 import { postsAPI } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 

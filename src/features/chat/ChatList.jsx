@@ -205,8 +205,9 @@ function ChatConversation({ conversation, onBack }) {
   const otherAvatarUrl = resolveAssetUrl(otherUser?.avatarUrl);
   const isOtherOnline = otherUser?.isOnline ?? false;
 
+  // Renderiza como overlay fixo em cima de TUDO, assim o header do MainLayout nunca some
   return (
-    <div className="flex flex-col h-full bg-slate-950" onClick={() => setActiveReactionMsgId(null)}>
+    <div className="fixed inset-0 z-[80] flex flex-col bg-slate-950" onClick={() => setActiveReactionMsgId(null)}>
       {/* Chat Header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-slate-900 border-b border-slate-800 shrink-0">
         <button onClick={onBack} className="text-slate-400 hover:text-white active:scale-90 transition-transform">
@@ -431,64 +432,66 @@ export default function ChatList() {
       .catch(() => setLoading(false));
   }, [location.state]);
 
-  if (activeConv) {
-    return <ChatConversation conversation={activeConv} onBack={() => setActiveConv(null)} />;
-  }
-
-  if (loading) return <div className="flex justify-center p-10"><LoadingSpinner /></div>;
-
-  if (!conversations.length) {
-    return (
-      <div className="flex flex-col items-center justify-center p-10 mt-16 text-center">
-        <div className="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center mb-4">
-          <MessageSquare size={32} className="text-purple-300" />
-        </div>
-        <h3 className="text-lg font-bold text-slate-700 mb-2">Sem conversas</h3>
-        <p className="text-sm text-slate-400 max-w-[200px]">Encontre au pairs no feed e inicie uma conversa!</p>
-      </div>
-    );
-  }
-
   return (
     <div>
-      <h2 className="text-lg font-bold text-slate-900 px-4 py-4">Mensagens</h2>
-      {conversations.map(conv => {
-        const otherUser = conv.otherParticipants?.[0] || conv.users?.find(u => u.userId !== user?.id)?.user;
-        const otherAvatarUrl = resolveAssetUrl(otherUser?.avatarUrl);
-        const isOnline = otherUser?.isOnline ?? false;
-        return (
-          <button
-            key={conv.id}
-            onClick={() => setActiveConv(conv)}
-            className="flex items-center gap-3 w-full px-4 py-3.5 hover:bg-slate-50 transition-colors border-b border-slate-50 active:bg-slate-100"
-          >
-            <div className="relative shrink-0">
-              <div className="w-13 h-13 rounded-full bg-gradient-to-tr from-rose-400 to-purple-500 flex items-center justify-center text-white font-bold overflow-hidden" style={{width: '52px', height: '52px'}}>
-                {otherAvatarUrl ? (
-                  <img src={otherAvatarUrl} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-lg">{(otherUser?.displayName || 'U')[0].toUpperCase()}</span>
-                )}
-              </div>
-              <span className={`absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-white rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-slate-300'}`}></span>
-            </div>
-            <div className="flex-1 text-left min-w-0">
-              <p className="text-sm font-bold text-slate-900 truncate">{otherUser?.displayName || 'Usuário'}</p>
-              <p className="text-xs text-slate-400 truncate">{conv.lastMessagePreview || conv.lastMessage?.content || 'Envie uma mensagem'}</p>
-            </div>
-            <div className="flex flex-col items-end gap-1 shrink-0">
-              {(conv.lastMessageAt || conv.lastMessage?.createdAt) && (
-                <span className="text-[10px] text-slate-400">
-                  {new Date(conv.lastMessageAt || conv.lastMessage.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              )}
-              {conv.unreadCount > 0 && (
-                <span className="bg-rose-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">{conv.unreadCount}</span>
-              )}
-            </div>
-          </button>
-        );
-      })}
+      {/* Lista de conversas - sempre montada, nunca desmontada */}
+      {loading ? (
+        <div className="flex justify-center p-10"><LoadingSpinner /></div>
+      ) : !conversations.length ? (
+        <div className="flex flex-col items-center justify-center p-10 mt-16 text-center">
+          <div className="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center mb-4">
+            <MessageSquare size={32} className="text-purple-300" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-700 mb-2">Sem conversas</h3>
+          <p className="text-sm text-slate-400 max-w-[200px]">Encontre au pairs no feed e inicie uma conversa!</p>
+        </div>
+      ) : (
+        <div>
+          <h2 className="text-lg font-bold text-slate-900 px-4 py-4">Mensagens</h2>
+          {conversations.map(conv => {
+            const otherUser = conv.otherParticipants?.[0] || conv.users?.find(u => u.userId !== user?.id)?.user;
+            const otherAvatarUrl = resolveAssetUrl(otherUser?.avatarUrl);
+            const isOnline = otherUser?.isOnline ?? false;
+            return (
+              <button
+                key={conv.id}
+                onClick={() => setActiveConv(conv)}
+                className="flex items-center gap-3 w-full px-4 py-3.5 hover:bg-slate-50 transition-colors border-b border-slate-50 active:bg-slate-100"
+              >
+                <div className="relative shrink-0">
+                  <div className="w-13 h-13 rounded-full bg-gradient-to-tr from-rose-400 to-purple-500 flex items-center justify-center text-white font-bold overflow-hidden" style={{width: '52px', height: '52px'}}>
+                    {otherAvatarUrl ? (
+                      <img src={otherAvatarUrl} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-lg">{(otherUser?.displayName || 'U')[0].toUpperCase()}</span>
+                    )}
+                  </div>
+                  <span className={`absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-white rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-slate-300'}`}></span>
+                </div>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-sm font-bold text-slate-900 truncate">{otherUser?.displayName || 'Usuário'}</p>
+                  <p className="text-xs text-slate-400 truncate">{conv.lastMessagePreview || conv.lastMessage?.content || 'Envie uma mensagem'}</p>
+                </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  {(conv.lastMessageAt || conv.lastMessage?.createdAt) && (
+                    <span className="text-[10px] text-slate-400">
+                      {new Date(conv.lastMessageAt || conv.lastMessage.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
+                  {conv.unreadCount > 0 && (
+                    <span className="bg-rose-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">{conv.unreadCount}</span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Conversa como overlay fixo - NÃO afeta o MainLayout header */}
+      {activeConv && (
+        <ChatConversation conversation={activeConv} onBack={() => setActiveConv(null)} />
+      )}
     </div>
   );
 }
