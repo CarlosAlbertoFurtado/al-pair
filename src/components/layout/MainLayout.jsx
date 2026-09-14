@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Home, Headphones, Plus, MessageCircle, User, Search, Bell, Menu, X, ChevronRight, Zap, ShoppingBag, MapPin, Users, Info, Settings, HelpCircle, Gift } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { notificationsAPI } from '../../api';
-import useAuthStore from '../../store/useAuthStore'; // Assumindo que a store de auth existe para pegar os dados do user, se não existir usaremos fallback
+import { useAuthStore } from '../../store/useAuthStore'; // Assumindo que a store de auth existe para pegar os dados do user, se não existir usaremos fallback
 
 function NavItem({ to, icon: Icon, label, badge }) {
   return (
