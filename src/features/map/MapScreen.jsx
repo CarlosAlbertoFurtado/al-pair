@@ -1,32 +1,106 @@
-import { useState, useEffect } from 'react';
-import { MapPin, MessageCircle, UserPlus, X, Loader2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { MapPin, MessageCircle, UserPlus, X, Loader2, Navigation, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { usersAPI, chatAPI, resolveAssetUrl } from '../../api';
 import { useAuthStore } from '../../store/useAuthStore';
+
+// Haversine formula para calcular distância real entre coordenadas
+function getDistanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
 
 export default function MapScreen() {
   const [nearbyUsers, setNearbyUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationError, setLocationError] = useState('');
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Simular scan por proximidade
-    const scanTimer = setTimeout(() => setScanning(false), 2500);
-    
-    // Buscar usuários da plataforma como "próximos"
-    usersAPI.search({ limit: 12 })
-      .then(res => {
-        const users = (res.data.data.users || []).filter(u => u.id !== user?.id);
-        setNearbyUsers(users);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+  const fetchNearby = useCallback(async (lat, lng) => {
+    try {
+      // Tentar buscar por proximidade real via API
+      const res = await usersAPI.getNearby(lat, lng, 100);
+      const users = (res.data.data || []).filter(u => u.id !== user?.id);
+      
+      // Calcular distância real para cada usuário
+      const usersWithDist = users.map(u => ({
+        ...u,
+        distance: u.latitude && u.longitude 
+          ? Math.round(getDistanceKm(lat, lng, u.latitude, u.longitude))
+          : null
+      })).sort((a, b) => (a.distance || 999) - (b.distance || 999));
+      
+      setNearbyUsers(usersWithDist);
+    } catch (err) {
+      // Fallback: buscar por search se o nearby falhar
+      console.warn('Nearby API failed, using search fallback:', err);
+      try {
+        const res = await usersAPI.search({ q: user?.city || 'au pair', limit: 15 });
+        const users = (res.data.data?.users || []).filter(u => u.id !== user?.id);
+        setNearbyUsers(users.map(u => ({ ...u, distance: null })));
+      } catch {
+        setNearbyUsers([]);
+      }
+    } finally {
+      setLoading(false);
+      setScanning(false);
+    }
+  }, [user?.id, user?.city]);
 
-    return () => clearTimeout(scanTimer);
-  }, [user?.id]);
+  useEffect(() => {
+    // Pedir localização GPS
+    if (!navigator.geolocation) {
+      setLocationError('Seu navegador não suporta geolocalização.');
+      setScanning(false);
+      setLoading(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserLocation({ lat: latitude, lng: longitude });
+        
+        // Enviar localização para o backend
+        try { await usersAPI.updateLocation(latitude, longitude); } catch {}
+        
+        // Buscar usuários próximos
+        fetchNearby(latitude, longitude);
+      },
+      (err) => {
+        console.warn('GPS denied:', err);
+        setLocationError('Permita o acesso à localização para encontrar Au Pairs perto de você.');
+        // Fallback sem GPS
+        fetchNearby(0, 0);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+    );
+  }, [fetchNearby]);
+
+  const handleRefresh = () => {
+    setScanning(true);
+    setLoading(true);
+    if (userLocation) {
+      fetchNearby(userLocation.lat, userLocation.lng);
+    } else {
+      navigator.geolocation?.getCurrentPosition(
+        (pos) => {
+          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          fetchNearby(pos.coords.latitude, pos.coords.longitude);
+        },
+        () => fetchNearby(0, 0)
+      );
+    }
+  };
 
   const handleMessage = async (targetUser) => {
     try {
@@ -49,48 +123,51 @@ export default function MapScreen() {
   return (
     <div className="min-h-screen bg-slate-950 text-white relative overflow-hidden">
       {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px]">
           <div className="absolute inset-0 rounded-full border border-purple-500/10 animate-ping" style={{animationDuration: '4s'}}></div>
           <div className="absolute inset-[60px] rounded-full border border-rose-500/10 animate-ping" style={{animationDuration: '3s', animationDelay: '0.5s'}}></div>
           <div className="absolute inset-[120px] rounded-full border border-purple-500/15 animate-ping" style={{animationDuration: '3.5s', animationDelay: '1s'}}></div>
           <div className="absolute inset-[180px] rounded-full border border-rose-500/20 animate-pulse" style={{animationDuration: '2s'}}></div>
         </div>
-        {/* Floating dots */}
-        {[...Array(8)].map((_, i) => (
-          <div 
-            key={i}
-            className="absolute w-2 h-2 bg-purple-400/30 rounded-full animate-pulse"
-            style={{ 
-              top: `${15 + Math.random() * 70}%`, 
-              left: `${10 + Math.random() * 80}%`,
-              animationDelay: `${i * 0.3}s`,
-              animationDuration: `${2 + Math.random() * 2}s`
-            }}
-          />
-        ))}
       </div>
 
       {/* Header */}
       <div className="relative z-10 px-5 pt-6 pb-4">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 bg-gradient-to-tr from-rose-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/30">
-            <MapPin size={20} />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-tr from-rose-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/30">
+              <MapPin size={20} />
+            </div>
+            <div>
+              <h1 className="text-xl font-black">Radar Au Pairs</h1>
+              <p className="text-sm text-slate-400">
+                {userLocation ? 'Buscando na sua região' : 'Ative o GPS para resultados precisos'}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-black">Radar Au Pairs</h1>
-            <p className="text-sm text-slate-400">Encontre conexões perto de você</p>
-          </div>
+          <button onClick={handleRefresh} className="p-2 bg-slate-800/60 rounded-full text-slate-400 hover:text-white active:scale-90 transition-transform">
+            <RefreshCw size={18} className={scanning ? 'animate-spin' : ''} />
+          </button>
         </div>
       </div>
+
+      {/* Location Error */}
+      {locationError && (
+        <div className="relative z-10 mx-5 mb-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-3">
+          <Navigation size={18} className="text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm text-amber-300 font-semibold">{locationError}</p>
+            <button onClick={handleRefresh} className="text-xs text-amber-400 underline mt-1">Tentar novamente</button>
+          </div>
+        </div>
+      )}
 
       {/* Scanning State */}
       {scanning && (
         <div className="relative z-10 flex flex-col items-center justify-center py-20">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-rose-500/20 to-purple-600/20 flex items-center justify-center animate-pulse">
-              <Loader2 size={32} className="text-purple-400 animate-spin" />
-            </div>
+          <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-rose-500/20 to-purple-600/20 flex items-center justify-center animate-pulse">
+            <Loader2 size={32} className="text-purple-400 animate-spin" />
           </div>
           <p className="text-purple-300 font-bold mt-6 text-lg">Buscando Au Pairs...</p>
           <p className="text-slate-500 text-sm mt-2">Escaneando sua região</p>
@@ -116,13 +193,12 @@ export default function MapScreen() {
           <div className="space-y-3">
             {nearbyUsers.map((u, i) => {
               const avatar = resolveAssetUrl(u.avatarUrl);
-              const distance = Math.floor(Math.random() * 45) + 1; // Simulated
               const roleLabel = u.role === 'CANDIDATE' ? '🌍 Quer ser Au Pair' : u.role === 'ALUMNI' ? '🎓 Ex Au Pair' : '⭐ Au Pair';
               return (
                 <div 
                   key={u.id}
                   className="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-4 border border-slate-700/40 flex items-center gap-4 animate-in fade-in slide-in-from-bottom-2 active:bg-slate-700/60 transition-colors"
-                  style={{ animationDelay: `${i * 100}ms` }}
+                  style={{ animationDelay: `${i * 80}ms` }}
                   onClick={() => setSelectedUser(u)}
                 >
                   <div className="relative shrink-0">
@@ -135,14 +211,16 @@ export default function MapScreen() {
                         )}
                       </div>
                     </div>
-                    <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-400 border-2 border-slate-800 rounded-full"></span>
+                    <span className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 border-2 border-slate-800 rounded-full ${u.isOnline ? 'bg-emerald-400' : 'bg-slate-500'}`}></span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-white truncate">{u.displayName}</p>
                     <p className="text-xs text-slate-400 truncate">{roleLabel}</p>
                     <div className="flex items-center gap-1 mt-1">
                       <MapPin size={11} className="text-rose-400" />
-                      <span className="text-[11px] text-rose-400 font-semibold">~{distance} km de distância</span>
+                      <span className="text-[11px] text-rose-400 font-semibold">
+                        {u.distance != null ? `~${u.distance} km` : (u.city || 'Localização não informada')}
+                      </span>
                     </div>
                   </div>
                   <div className="flex gap-2 shrink-0">
@@ -170,7 +248,7 @@ export default function MapScreen() {
                 <MapPin size={32} className="text-slate-600" />
               </div>
               <p className="text-slate-400 font-bold">Nenhuma Au Pair encontrada</p>
-              <p className="text-slate-600 text-sm mt-2">Tente novamente mais tarde</p>
+              <p className="text-slate-600 text-sm mt-2">Ative o GPS ou tente novamente mais tarde</p>
             </div>
           )}
         </div>
@@ -179,7 +257,7 @@ export default function MapScreen() {
       {/* Selected User Modal */}
       {selectedUser && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-in fade-in" onClick={() => setSelectedUser(null)}>
-          <div className="bg-slate-900 rounded-3xl p-6 w-full max-w-sm border border-slate-800 shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+          <div className="bg-slate-900 rounded-3xl p-6 w-full max-w-sm border border-slate-800 shadow-2xl animate-in zoom-in-95 relative" onClick={e => e.stopPropagation()}>
             <button onClick={() => setSelectedUser(null)} className="absolute top-4 right-4 text-slate-500 hover:text-white">
               <X size={20} />
             </button>
@@ -195,6 +273,12 @@ export default function MapScreen() {
               </div>
               <h3 className="text-lg font-black text-white">{selectedUser.displayName}</h3>
               <p className="text-sm text-slate-400 mt-1">{selectedUser.bio || 'Au Pair Conectada'}</p>
+              <div className="flex items-center justify-center gap-2 mt-2">
+                <span className={`w-2 h-2 rounded-full ${selectedUser.isOnline ? 'bg-emerald-400' : 'bg-slate-500'}`}></span>
+                <span className={`text-xs font-semibold ${selectedUser.isOnline ? 'text-emerald-400' : 'text-slate-500'}`}>
+                  {selectedUser.isOnline ? 'Online agora' : 'Offline'}
+                </span>
+              </div>
               {selectedUser.city && (
                 <p className="text-xs text-rose-400 mt-2 flex items-center justify-center gap-1">
                   <MapPin size={12} /> {selectedUser.city}{selectedUser.country ? `, ${selectedUser.country}` : ''}

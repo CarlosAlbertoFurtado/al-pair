@@ -115,6 +115,7 @@ export const authAPI = {
 export const postsAPI = {
   getFeed: (filters = {}) => api.get('/posts', { params: filters }),
   create: (data) => api.post('/posts', data),
+  delete: (id) => api.delete(`/posts/${id}`),
   like: (id) => api.post(`/posts/${id}/like`),
   getComments: (id) => api.get(`/posts/${id}/comments`),
   addComment: (id, content) => api.post(`/posts/${id}/comments`, { content }),
@@ -132,6 +133,9 @@ export const usersAPI = {
   getProfile: (id) => api.get(`/users/${id}`),
   updateProfile: (data) => api.patch('/users/profile', data),
   follow: (id) => api.post(`/users/${id}/follow`),
+  getNearby: (lat, lng, radius = 50) => api.get('/users/nearby', { params: { lat, lng, radius } }),
+  updateLocation: (latitude, longitude) => api.post('/users/location', { latitude, longitude }),
+  search: (params = {}) => api.get('/search', { params }),
 };
 
 export const roomsAPI = {

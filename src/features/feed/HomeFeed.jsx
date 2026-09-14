@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Bookmark, Flag, Heart, MessageSquare, Share2 } from 'lucide-react';
+import { Bookmark, Flag, Heart, MessageSquare, Share2, Trash2, MoreVertical } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { postsAPI, moderationAPI, resolveAssetUrl } from '../../api';
+import { useAuthStore } from '../../store/useAuthStore';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import { ReportModal } from '../../components/ReportModal';
 import { CommentsModal } from './CommentsModal';
@@ -36,7 +37,7 @@ function PostSkeleton() {
   );
 }
 
-export function PostCard({ post }) {
+export function PostCard({ post, onDelete }) {
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likeCount, setLikeCount] = useState(post._count?.likes || post.likesCount || 0);
   const [commentCount, setCommentCount] = useState(post._count?.comments || post.commentsCount || 0);
@@ -44,11 +45,12 @@ export function PostCard({ post }) {
   const [showComments, setShowComments] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [notice, setNotice] = useState('');
-  
-  // Double-tap animation state
   const [showHeartAnim, setShowHeartAnim] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const isOwner = user?.id && (post.author?.id === user.id || post.authorId === user.id);
 
   const handleLike = async () => {
     try {
@@ -105,6 +107,19 @@ export function PostCard({ post }) {
   const handleReport = async (payload) => {
     await moderationAPI.report(payload);
     showToast('Denúncia enviada para moderação.');
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Tem certeza que deseja excluir esta publicação?')) return;
+    setDeleting(true);
+    try {
+      await postsAPI.delete(post.id);
+      onDelete?.(post.id);
+    } catch (err) {
+      console.error('Delete failed:', err);
+      showToast('Não foi possível excluir.');
+      setDeleting(false);
+    }
   };
 
   const showToast = (message) => {
@@ -226,9 +241,20 @@ export function PostCard({ post }) {
           <button onClick={handleBookmark} className={`transition-colors active:scale-90 ${saved ? 'text-amber-500' : 'text-slate-500 hover:text-amber-400'}`}>
             <Bookmark size={22} fill={saved ? 'currentColor' : 'none'} />
           </button>
-          <button onClick={() => setShowReport(true)} className="text-slate-400 hover:text-red-500 transition-colors active:scale-90" aria-label="Denunciar publicação">
-            <Flag size={20} />
-          </button>
+          {isOwner ? (
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className="text-slate-400 hover:text-red-500 transition-colors active:scale-90 disabled:opacity-40"
+              aria-label="Excluir publicação"
+            >
+              <Trash2 size={20} />
+            </button>
+          ) : (
+            <button onClick={() => setShowReport(true)} className="text-slate-400 hover:text-red-500 transition-colors active:scale-90" aria-label="Denunciar publicação">
+              <Flag size={20} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -288,6 +314,10 @@ export default function HomeFeed() {
   }, []);
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
+
+  const handleDeletePost = useCallback((postId) => {
+    setPosts(prev => prev.filter(p => p.id !== postId));
+  }, []);
 
   // Pull to refresh handlers
   const handleTouchStart = (e) => {
@@ -372,7 +402,7 @@ export default function HomeFeed() {
         <div>
           {posts.map((post, i) => (
             <div key={post.id} ref={i === posts.length - 1 ? lastPostRef : null}>
-              <PostCard post={post} />
+              <PostCard post={post} onDelete={handleDeletePost} />
             </div>
           ))}
           {loadingMore && <div className="p-4"><PostSkeleton /></div>}
