@@ -4,6 +4,10 @@
 
 import { prisma } from '../../../config/database.js';
 import { NotFoundError, ForbiddenError, ConflictError } from '../../../shared/errors/AppError.js';
+import { RoomServiceClient } from 'livekit-server-sdk';
+import { env } from '../../../config/env.js';
+
+const roomServiceLiveKit = new RoomServiceClient(env.LIVEKIT_URL, env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET);
 
 export const roomsService = {
   /**
@@ -123,18 +127,54 @@ export const roomsService = {
   },
 
   /**
-   * Encerra uma sala (somente host).
+   * Encerra uma sala (somente host). Agora apaga definitivamente do banco.
    */
   async endRoom(roomId: string, hostId: string) {
     const room = await prisma.room.findUnique({ where: { id: roomId } });
     if (!room) throw new NotFoundError('Sala');
     if (room.hostId !== hostId) throw new ForbiddenError('Apenas o anfitrião pode encerrar a sala.');
 
-    await prisma.room.update({
+    // Apaga a sala (o cascade apaga os participantes no DB)
+    await prisma.room.delete({
       where: { id: roomId },
-      data: { status: 'ENDED', endedAt: new Date() },
     });
 
+    // Encerra a sala no LiveKit
+    try {
+      await roomServiceLiveKit.deleteRoom(roomId);
+    } catch (err) {
+      console.warn('Falha ao encerrar sala no LiveKit (pode já estar vazia):', err);
+    }
+
     return { ended: true };
+  },
+
+  /**
+   * Promove um ouvinte para palestrante (speaker) na sala.
+   */
+  async approveSpeaker(roomId: string, hostId: string, targetUserId: string) {
+    const room = await prisma.room.findUnique({ where: { id: roomId } });
+    if (!room) throw new NotFoundError('Sala');
+    if (room.hostId !== hostId) throw new ForbiddenError('Apenas o anfitrião pode aprovar palestrantes.');
+
+    // Promove no banco de dados
+    await prisma.roomParticipant.update({
+      where: { roomId_userId: { roomId: roomId, userId: targetUserId } },
+      data: { isSpeaker: true },
+    });
+
+    // Promove no LiveKit
+    try {
+      await roomServiceLiveKit.updateParticipant(roomId, targetUserId, undefined, {
+        canPublish: true,
+        canSubscribe: true,
+        canPublishData: true,
+      });
+    } catch (err) {
+      console.error('Falha ao promover participante no LiveKit:', err);
+      throw new ConflictError('Não foi possível atualizar as permissões de áudio.');
+    }
+
+    return { approved: true };
   },
 };

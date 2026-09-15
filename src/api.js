@@ -147,6 +147,7 @@ export const roomsAPI = {
   leave: (id) => api.post(`/rooms/${id}/leave`),
   start: (id) => api.post(`/rooms/${id}/start`),
   end: (id) => api.post(`/rooms/${id}/end`),
+  approveSpeaker: (id, participantId) => api.post(`/rooms/${id}/approve-speaker`, { participantId }),
   getToken: (id) => api.get(`/rooms/${id}/token`),
 };
 

@@ -28,6 +28,9 @@ router.post('/:id/start', authenticate, roomsController.startRoom);
 // POST /api/rooms/:id/end - Encerrar sala (host)
 router.post('/:id/end', authenticate, roomsController.endRoom);
 
+// POST /api/rooms/:id/approve-speaker - Aprovar ouvinte para palestrante (host)
+router.post('/:id/approve-speaker', authenticate, roomsController.approveSpeaker);
+
 // GET /api/rooms/:id/token - Obter token LiveKit para entrar na sala de áudio
 router.get('/:id/token', authenticate, roomsController.getRoomToken);
 

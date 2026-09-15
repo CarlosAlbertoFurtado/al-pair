@@ -3,9 +3,9 @@ import { Plus, Headphones, Users, Mic, Clock, X, Crown, Radio } from 'lucide-rea
 import { roomsAPI, resolveAssetUrl } from '../../api';
 import { useAuthStore } from '../../store/useAuthStore';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
-import LiveRoom from './LiveRoom';
-
-// ─── Modal de criar sala ────────────────────────────────────────────────────
+import { useAuthStore } from '../../store/useAuthStore';
+import { useAudioRoomStore } from '../../store/useAudioRoomStore';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 function CreateRoomModal({ onClose, onCreate }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -153,7 +153,7 @@ export default function AudioRooms() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [joiningId, setJoiningId] = useState(null);
-  const [activeRoom, setActiveRoom] = useState(null); // dados do LiveKit para sala ativa
+  const { setActiveRoom } = useAudioRoomStore();
   const { user } = useAuthStore();
 
   const fetchRooms = async () => {
@@ -186,16 +186,6 @@ export default function AudioRooms() {
     } finally {
       setJoiningId(null);
     }
-  };
-
-  const handleLeave = async () => {
-    // Tenta sair do banco de dados (best-effort)
-    if (activeRoom) {
-      const room = rooms.find(r => r.id === activeRoom.roomId);
-      if (room) await roomsAPI.leave(room.id).catch(() => {});
-    }
-    setActiveRoom(null);
-    fetchRooms();
   };
 
   const handleCreated = async (room) => {
@@ -287,11 +277,6 @@ export default function AudioRooms() {
           onClose={() => setShowCreate(false)}
           onCreate={handleCreated}
         />
-      )}
-
-      {/* Sala ativa (overlay de áudio) */}
-      {activeRoom && (
-        <LiveRoom roomData={activeRoom} onLeave={handleLeave} />
       )}
     </div>
   );

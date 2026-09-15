@@ -1,6 +1,7 @@
 import { useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/useAuthStore';
+import { useAudioRoomStore } from './store/useAudioRoomStore';
 import { LoadingSpinner } from './components/LoadingSpinner';
 
 // Layout
@@ -23,9 +24,11 @@ const MyPostsScreen = lazy(() => import('./features/profile/MyPostsScreen'));
 const UserProfileScreen = lazy(() => import('./features/profile/UserProfileScreen'));
 const LegalScreen = lazy(() => import('./features/legal/LegalScreen'));
 const MapScreen = lazy(() => import('./features/map/MapScreen'));
+const LiveRoom = lazy(() => import('./features/rooms/LiveRoom'));
 
 export default function App() {
   const { checkAuth, isAuthenticated, isLoading } = useAuthStore();
+  const { activeRoom, clearRoom } = useAudioRoomStore();
 
   useEffect(() => {
     checkAuth();
@@ -70,6 +73,11 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
+      
+      {/* Global Audio Room (Floating Player) */}
+      {activeRoom && isAuthenticated && (
+        <LiveRoom roomData={activeRoom} onLeave={clearRoom} />
+      )}
     </Suspense>
   );
 }

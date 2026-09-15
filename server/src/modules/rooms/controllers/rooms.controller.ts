@@ -46,6 +46,16 @@ export const roomsController = {
     res.status(200).json({ success: true, data: result });
   },
 
+  async approveSpeaker(req: AuthRequest, res: Response): Promise<void> {
+    const { participantId } = req.body;
+    if (!participantId) {
+      res.status(400).json({ success: false, message: 'participantId é obrigatório' });
+      return;
+    }
+    const result = await roomsService.approveSpeaker((req.params.id as string), req.userId!, participantId);
+    res.status(200).json({ success: true, data: result });
+  },
+
   /**
    * Gera um token LiveKit para o usuário entrar na sala de áudio.
    * O token é de curta duração (1h) e contém as permissões de áudio.
@@ -73,6 +83,7 @@ export const roomsController = {
     const at = new AccessToken(env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET, {
       identity: userId,
       name: participantName,
+      metadata: JSON.stringify({ avatarUrl: user?.avatarUrl }),
       ttl: '1h',
     });
 
