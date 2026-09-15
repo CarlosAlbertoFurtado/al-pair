@@ -357,11 +357,11 @@ export default function LiveRoom({ roomData, onLeave }) {
         <>
           <img
             src={backgroundUrl}
-            alt=""
+            alt="Fundo"
             className="absolute inset-0 w-full h-full object-cover"
-            style={{ opacity: 0.35 }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-slate-50/80 to-white/95 backdrop-blur-sm" />
+          {/* Camada translúcida mais suave para não esconder a foto, mas manter o texto legível */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/30 to-white/80 backdrop-blur-[2px]" />
         </>
       )}
 
