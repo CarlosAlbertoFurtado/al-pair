@@ -16,7 +16,7 @@ import { useAudioRoomStore } from '../../store/useAudioRoomStore';
 import { resolveAssetUrl, roomsAPI } from '../../api';
 
 // ─── Chat da Sala ─────────────────────────────────────────────────────────────
-function RoomChat({ onClose }) {
+function RoomChat() {
   const { send, chatMessages } = useChat();
   const [message, setMessage] = useState('');
   const scrollRef = useRef(null);
@@ -34,46 +34,37 @@ function RoomChat({ onClose }) {
   };
 
   return (
-    <div className="absolute inset-0 z-50 bg-white flex flex-col animate-in slide-in-from-bottom-full duration-300">
-      <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-        <h3 className="font-black text-slate-900 flex items-center gap-2">
-          <MessageSquare size={18} className="text-rose-500" /> Chat ao Vivo
-        </h3>
-        <button onClick={onClose} className="p-2 rounded-full bg-slate-200 text-slate-600 active:scale-95">
-          <X size={18} />
-        </button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-5 space-y-4" ref={scrollRef}>
+    <div className="flex flex-col h-64 bg-white/60 backdrop-blur-md border-t border-white/40 rounded-t-3xl shadow-[0_-8px_30px_rgba(0,0,0,0.05)] relative z-20">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3" ref={scrollRef}>
         {chatMessages.map((msg, i) => (
           <div key={i} className="flex flex-col">
-            <span className="text-[10px] font-bold text-slate-500 mb-1">{msg.from?.name || 'Alguém'}</span>
-            <div className="bg-slate-100 px-4 py-2.5 rounded-2xl rounded-tl-sm text-sm text-slate-700 w-fit max-w-[85%]">
+            <span className="text-[10px] font-bold text-slate-500 mb-0.5 ml-1">{msg.from?.name || 'Alguém'}</span>
+            <div className="bg-white/80 px-4 py-2 rounded-2xl rounded-tl-sm text-sm text-slate-700 w-fit max-w-[90%] shadow-sm border border-white/50">
               {msg.message}
             </div>
           </div>
         ))}
         {chatMessages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-slate-400">
-            <MessageSquare size={32} className="mb-2 opacity-50" />
-            <p className="text-sm">Nenhuma mensagem ainda.</p>
+            <MessageSquare size={24} className="mb-2 opacity-40" />
+            <p className="text-xs">O chat está aberto. Mande um oi!</p>
           </div>
         )}
       </div>
 
-      <form onSubmit={handleSend} className="p-4 border-t border-slate-200 bg-white flex gap-2">
+      <form onSubmit={handleSend} className="p-3 bg-white/70 backdrop-blur-xl border-t border-white/50 flex gap-2 rounded-t-xl pb-6">
         <input
           value={message}
           onChange={e => setMessage(e.target.value)}
-          placeholder="Escreva algo..."
-          className="flex-1 bg-slate-100 rounded-full px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-rose-500/50 transition-all"
+          placeholder="Diga alguma coisa..."
+          className="flex-1 bg-white/80 border border-slate-200/50 rounded-full px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-rose-500/50 transition-all shadow-inner"
         />
         <button
           type="submit"
           disabled={!message.trim()}
-          className="w-11 h-11 bg-rose-500 text-white rounded-full flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
+          className="w-10 h-10 bg-gradient-to-tr from-rose-500 to-purple-500 text-white rounded-full flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50 shadow-md"
         >
-          <Send size={16} className="-ml-1" />
+          <Send size={14} className="-ml-1" />
         </button>
       </form>
     </div>
@@ -124,6 +115,19 @@ function RoomPanel({ room, onLeave }) {
     }
   };
 
+  const handleExit = async () => {
+    try {
+      if (room?.isHost) {
+        await roomsAPI.end(room.roomId);
+      } else {
+        await roomsAPI.leave(room.roomId);
+      }
+    } catch (e) {
+      console.warn("API disconnect err", e);
+    }
+    onLeave();
+  };
+
   // Renderização Mini-Player
   if (isMinimized) {
     return (
@@ -148,7 +152,7 @@ function RoomPanel({ room, onLeave }) {
           <button onClick={() => setMinimized(false)} className="p-2.5 rounded-full bg-rose-500 text-white shadow-lg active:scale-95">
             <Maximize2 size={18} />
           </button>
-          <button onClick={onLeave} className="p-2.5 rounded-full bg-slate-800 text-white active:scale-95">
+          <button onClick={handleExit} className="p-2.5 rounded-full bg-slate-800 text-white active:scale-95">
             <LogOut size={18} />
           </button>
         </div>
@@ -160,7 +164,7 @@ function RoomPanel({ room, onLeave }) {
   return (
     <div className="flex flex-col h-full bg-transparent">
       {/* Header da sala */}
-      <div className="bg-white/70 backdrop-blur-xl px-5 pt-10 pb-6 border-b border-slate-200/50 shadow-sm z-10 flex items-start justify-between">
+      <div className="bg-white/80 backdrop-blur-xl px-5 pt-10 pb-4 shadow-sm z-20 flex items-start justify-between border-b border-white/50">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2.5 h-2.5 bg-rose-500 rounded-full animate-pulse" />
@@ -228,42 +232,32 @@ function RoomPanel({ room, onLeave }) {
 
       <RoomAudioRenderer />
 
-      {/* Chat Overlay */}
-      {showChat && <RoomChat onClose={() => setShowChat(false)} />}
+      {/* Chat Embutido Sempre Aberto */}
+      <RoomChat />
 
-      {/* Barra de controles inferior */}
-      <div className="px-5 py-4 bg-white/80 backdrop-blur-xl border-t border-slate-200/50 flex items-center justify-between shadow-[0_-4px_12px_-1px_rgba(0,0,0,0.05)] z-10">
-        <div className="flex items-center gap-3">
-          {amISpeaker ? (
-            <TrackToggle
-              source={Track.Source.Microphone}
-              className="flex items-center justify-center w-12 h-12 rounded-full bg-white text-slate-700 font-bold active:scale-95 transition-transform border border-slate-200 shadow-sm"
-            >
-              {isMicrophoneEnabled ? <Mic size={20} className="text-rose-500" /> : <MicOff size={20} className="text-slate-400" />}
-            </TrackToggle>
-          ) : (
-            <button
-              onClick={() => sendHandRaise(new TextEncoder().encode('RAISE_HAND'), { reliable: true })}
-              className="flex items-center justify-center w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 font-bold active:scale-95 transition-transform border border-indigo-100 shadow-sm"
-            >
-              <Hand size={20} />
-            </button>
-          )}
-
-          <button
-            onClick={() => setShowChat(true)}
-            className="flex items-center justify-center w-12 h-12 rounded-full bg-white text-slate-600 active:scale-95 transition-transform border border-slate-200 shadow-sm"
+      {/* Barra de controles inferior sobrepondo o chat */}
+      <div className="absolute bottom-[72px] right-4 flex flex-col gap-3 z-30">
+        {amISpeaker ? (
+          <TrackToggle
+            source={Track.Source.Microphone}
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-white text-slate-700 font-bold active:scale-95 transition-transform border border-slate-200 shadow-xl"
           >
-            <MessageSquare size={20} />
+            {isMicrophoneEnabled ? <Mic size={20} className="text-rose-500" /> : <MicOff size={20} className="text-slate-400" />}
+          </TrackToggle>
+        ) : (
+          <button
+            onClick={() => sendHandRaise(new TextEncoder().encode('RAISE_HAND'), { reliable: true })}
+            className="flex items-center justify-center w-12 h-12 rounded-full bg-indigo-500 text-white font-bold active:scale-95 transition-transform shadow-xl shadow-indigo-500/40"
+          >
+            <Hand size={20} />
           </button>
-        </div>
+        )}
 
         <button
-          onClick={onLeave}
-          className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-sm active:scale-95 transition-all shadow-lg shadow-rose-500/30"
+          onClick={handleExit}
+          className="flex items-center justify-center w-12 h-12 rounded-full bg-rose-500 text-white active:scale-95 transition-transform shadow-xl shadow-rose-500/40"
         >
-          <LogOut size={18} />
-          Sair
+          <LogOut size={18} className="ml-1" />
         </button>
       </div>
     </div>
@@ -332,9 +326,8 @@ export default function LiveRoom({ roomData, onLeave }) {
     <div className={`fixed z-[90] flex flex-col transition-all duration-300 ${isMinimized ? 'inset-x-0 bottom-0 top-auto h-0 bg-transparent' : 'inset-0 bg-slate-100'}`}>
       {!isMinimized && (
         <>
-          <div className="absolute inset-0 z-0 bg-cover bg-center" style={{ backgroundImage: `url('${backgroundUrl}')` }} />
-          <div className="absolute inset-0 z-0 bg-white/70 backdrop-blur-2xl" />
-          <div className="absolute inset-0 z-0 bg-gradient-to-b from-white/90 via-white/50 to-slate-100/95" />
+          <div className="absolute inset-0 z-0 bg-cover bg-center opacity-40" style={{ backgroundImage: `url('${backgroundUrl}')` }} />
+          <div className="absolute inset-0 z-0 bg-gradient-to-b from-white/95 via-white/80 to-white/95 backdrop-blur-lg" />
         </>
       )}
       
