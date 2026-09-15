@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react';
 import { Plus, Headphones, Users, Mic, Clock, X, Crown, Radio } from 'lucide-react';
 import { roomsAPI, resolveAssetUrl } from '../../api';
 import { useAuthStore } from '../../store/useAuthStore';
-import { LoadingSpinner } from '../../components/LoadingSpinner';
-import { useAuthStore } from '../../store/useAuthStore';
 import { useAudioRoomStore } from '../../store/useAudioRoomStore';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
+
 function CreateRoomModal({ onClose, onCreate }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
