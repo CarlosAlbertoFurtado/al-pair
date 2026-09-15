@@ -75,8 +75,8 @@ export const roomsController = {
       return;
     }
 
-    // Busca o nome do usuário para identificar no LiveKit
-    const user = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true } });
+    // Busca o nome e avatar do usuário para identificar no LiveKit
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true, avatarUrl: true } });
     const participantName = user?.displayName || 'Participante';
 
     // Gera o token de acesso assinado com a API Key e Secret do LiveKit
