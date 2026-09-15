@@ -147,6 +147,7 @@ export const roomsAPI = {
   leave: (id) => api.post(`/rooms/${id}/leave`),
   start: (id) => api.post(`/rooms/${id}/start`),
   end: (id) => api.post(`/rooms/${id}/end`),
+  getToken: (id) => api.get(`/rooms/${id}/token`),
 };
 
 export const vaultAPI = {

@@ -46,6 +46,11 @@ export const env = {
   // E-mail transacional
   RESEND_API_KEY: getOptionalEnv('RESEND_API_KEY'),
   EMAIL_FROM: getOptionalEnv('EMAIL_FROM', 'AuPairConnect <noreply@aupairconnect.app>'),
+
+  // LiveKit - Salas de Áudio ao Vivo
+  LIVEKIT_API_KEY: getOptionalEnv('LIVEKIT_API_KEY'),
+  LIVEKIT_API_SECRET: getOptionalEnv('LIVEKIT_API_SECRET'),
+  LIVEKIT_URL: getOptionalEnv('LIVEKIT_URL', 'wss://app-carlos-oaq4cgc5.livekit.cloud'),
   
   // Helpers
   isDev: getEnv('NODE_ENV', 'development') === 'development',
