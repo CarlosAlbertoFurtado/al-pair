@@ -357,7 +357,7 @@ export default function LiveRoom({ roomData, onLeave }) {
             className="absolute inset-0 w-full h-full object-cover animate-pan-bg"
           />
           {/* Camada translúcida mais suave para não esconder a foto, mas manter o texto legível */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/30 to-white/80 backdrop-blur-[2px]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/30 to-white/80" />
         </>
       )}
 

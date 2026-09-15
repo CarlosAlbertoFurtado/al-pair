@@ -14,6 +14,7 @@ body {
   display: flex;
   justify-content: center;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
@@ -45,6 +46,9 @@ select:-webkit-autofill {
   width: 100%;
   max-width: 430px;
   height: 100vh;
+  height: 100dvh;
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-top: env(safe-area-inset-top);
   background: var(--color-surface);
   position: relative;
   overflow: hidden;
