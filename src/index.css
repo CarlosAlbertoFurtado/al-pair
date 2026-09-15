@@ -142,3 +142,14 @@ select:-webkit-autofill {
 .animate-slideUp {
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+@keyframes pan-bg {
+  0% { transform: scale(1.15) translate(0, 0); }
+  33% { transform: scale(1.15) translate(-2%, 3%); }
+  66% { transform: scale(1.15) translate(2%, -2%); }
+  100% { transform: scale(1.15) translate(0, 0); }
+}
+
+.animate-pan-bg {
+  animation: pan-bg 25s ease-in-out infinite;
+}

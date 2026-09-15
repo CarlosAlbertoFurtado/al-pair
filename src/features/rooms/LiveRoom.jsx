@@ -17,12 +17,8 @@ import { resolveAssetUrl, roomsAPI } from '../../api';
 
 // Fundo das salas - usando <img> para evitar bloqueio de CSP
 const ROOM_BACKGROUNDS = [
-  'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=1200&q=80',
-  'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1200&q=80',
-  'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1200&q=80',
-  'https://images.unsplash.com/photo-1517760444937-f6397edcbbcd?w=1200&q=80',
-  'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=1200&q=80',
-  'https://images.unsplash.com/photo-1496442226666-8d4d0e2815cb?w=1200&q=80',
+  '/assets/room_bg_1.jpg',
+  '/assets/room_bg_2.jpg',
 ];
 
 // ─── Modal de Perfil ──────────────────────────────────────────────────────────
@@ -357,8 +353,8 @@ export default function LiveRoom({ roomData, onLeave }) {
         <>
           <img
             src={backgroundUrl}
-            alt="Fundo"
-            className="absolute inset-0 w-full h-full object-cover"
+            alt="Fundo animado"
+            className="absolute inset-0 w-full h-full object-cover animate-pan-bg"
           />
           {/* Camada translúcida mais suave para não esconder a foto, mas manter o texto legível */}
           <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/30 to-white/80 backdrop-blur-[2px]" />
