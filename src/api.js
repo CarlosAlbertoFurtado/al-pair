@@ -133,6 +133,8 @@ export const usersAPI = {
   getProfile: (id) => api.get(`/users/${id}`),
   updateProfile: (data) => api.patch('/users/profile', data),
   follow: (id) => api.post(`/users/${id}/follow`),
+  getFollowers: (id) => api.get(`/users/${id}/followers`),
+  getFollowing: (id) => api.get(`/users/${id}/following`),
   getNearby: (lat, lng, radius = 50) => api.get('/users/nearby', { params: { lat, lng, radius } }),
   updateLocation: (latitude, longitude) => api.post('/users/location', { latitude, longitude }),
   search: (params = {}) => api.get('/search', { params }),

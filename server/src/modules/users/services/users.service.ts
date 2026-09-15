@@ -50,6 +50,18 @@ const publicProfileSelect = {
   },
 } as const;
 
+const connectionUserSelect = {
+  id: true,
+  displayName: true,
+  bio: true,
+  avatarUrl: true,
+  role: true,
+  city: true,
+  country: true,
+  isOnline: true,
+  isMentorActive: true,
+} as const;
+
 // ─── Service ───────────────────────────────────────────────
 
 export const usersService = {
@@ -163,6 +175,52 @@ export const usersService = {
       await createNotification(followingId, 'FOLLOW', 'Novo seguidor', 'Alguém começou a seguir você.', { followerId });
       return { following: true };
     }
+  },
+
+  async getFollowers(userId: string, viewerId?: string) {
+    const target = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+    if (!target) throw new NotFoundError('Usuário');
+    if (viewerId && viewerId !== userId && await hasBlockBetween(viewerId, userId)) {
+      throw new NotFoundError('Usuário');
+    }
+
+    const follows = await prisma.follow.findMany({
+      where: {
+        followingId: userId,
+        follower: visibleUserWhere(viewerId),
+      },
+      select: {
+        follower: { select: connectionUserSelect },
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+
+    return follows.map((follow) => follow.follower);
+  },
+
+  async getFollowing(userId: string, viewerId?: string) {
+    const target = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+    if (!target) throw new NotFoundError('Usuário');
+    if (viewerId && viewerId !== userId && await hasBlockBetween(viewerId, userId)) {
+      throw new NotFoundError('Usuário');
+    }
+
+    const follows = await prisma.follow.findMany({
+      where: {
+        followerId: userId,
+        following: visibleUserWhere(viewerId),
+      },
+      select: {
+        following: { select: connectionUserSelect },
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+
+    return follows.map((follow) => follow.following);
   },
 
   /**

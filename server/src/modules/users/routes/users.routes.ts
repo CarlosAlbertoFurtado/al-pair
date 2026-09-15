@@ -25,6 +25,12 @@ router.post('/location', authenticate, usersController.updateLocation);
 // GET /api/users/:id - Perfil público de um usuário
 router.get('/:id', optionalAuth, usersController.getProfile);
 
+// GET /api/users/:id/followers - Seguidores de um usuário
+router.get('/:id/followers', optionalAuth, usersController.getFollowers);
+
+// GET /api/users/:id/following - Pessoas que o usuário segue
+router.get('/:id/following', optionalAuth, usersController.getFollowing);
+
 // POST /api/users/:id/follow - Seguir/Deixar de seguir
 router.post('/:id/follow', authenticate, usersController.toggleFollow);
 

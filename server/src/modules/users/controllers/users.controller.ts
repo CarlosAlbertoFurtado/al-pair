@@ -27,11 +27,21 @@ export const usersController = {
     res.status(200).json({ success: true, data: result });
   },
 
+  async getFollowers(req: AuthRequest, res: Response): Promise<void> {
+    const users = await usersService.getFollowers((req.params.id as string), req.userId);
+    res.status(200).json({ success: true, data: { users } });
+  },
+
+  async getFollowing(req: AuthRequest, res: Response): Promise<void> {
+    const users = await usersService.getFollowing((req.params.id as string), req.userId);
+    res.status(200).json({ success: true, data: { users } });
+  },
+
   async getNearbyUsers(req: AuthRequest, res: Response): Promise<void> {
-    const { lat, lon, radius } = req.query;
+    const { lat, lon, lng, radius } = req.query;
     const users = await usersService.getNearbyUsers(
       parseFloat(lat as string),
-      parseFloat(lon as string),
+      parseFloat((lon || lng) as string),
       radius ? parseFloat(radius as string) : undefined,
       undefined,
       req.userId

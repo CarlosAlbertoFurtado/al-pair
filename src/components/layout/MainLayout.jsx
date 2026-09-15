@@ -141,7 +141,7 @@ export default function MainLayout() {
         {/* Drawer Header */}
         <div className="bg-gradient-to-b from-slate-800 to-slate-900 p-6 pt-10 border-b border-slate-800">
           <div className="flex justify-between items-start mb-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-rose-500 to-purple-600 p-[2px]">
+            <button onClick={() => { setIsDrawerOpen(false); navigate('/profile'); }} className="w-16 h-16 rounded-full bg-gradient-to-tr from-rose-500 to-purple-600 p-[2px] active:scale-95 transition-transform">
               <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center overflow-hidden">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
@@ -149,7 +149,7 @@ export default function MainLayout() {
                   <User size={28} className="text-slate-400" />
                 )}
               </div>
-            </div>
+            </button>
             <button onClick={() => setIsDrawerOpen(false)} className="p-2 bg-slate-800/50 rounded-full text-slate-400 hover:text-white active:scale-90">
               <X size={20} />
             </button>

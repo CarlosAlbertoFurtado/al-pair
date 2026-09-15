@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { ArrowLeft, MessageSquare, Send, X, Copy, Pin, Reply, Image, Mic, Camera, Pencil, Trash2, Check, CheckCheck } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { chatAPI, getSocket, resolveAssetUrl, uploadAPI } from '../../api';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { PhotoViewerModal } from '../../components/PhotoViewerModal';
 import { useAuthStore } from '../../store/useAuthStore';
 
 const REACTION_EMOJIS = ['❤️', '😂', '😮', '😢', '😡', '👍'];
@@ -20,6 +21,9 @@ function ChatConversation({ conversation, onBack, initialUnreadCount = 0, onRead
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [viewingImage, setViewingImage] = useState(null);
+  
+  const navigate = useNavigate();
   
   const { user } = useAuthStore();
   const socket = getSocket();
@@ -232,13 +236,13 @@ function ChatConversation({ conversation, onBack, initialUnreadCount = 0, onRead
           <ArrowLeft size={22} />
         </button>
         <div className="relative">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-rose-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm overflow-hidden">
+          <button onClick={() => navigate(`/user/${otherUser?.id}`)} className="w-10 h-10 rounded-full bg-gradient-to-tr from-rose-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm overflow-hidden active:scale-95 transition-transform">
             {otherAvatarUrl ? (
               <img src={otherAvatarUrl} alt="" className="w-full h-full object-cover" />
             ) : (
               (otherUser?.displayName || 'U')[0].toUpperCase()
             )}
-          </div>
+          </button>
           <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 border-2 border-slate-900 rounded-full ${isOtherOnline ? 'bg-emerald-400' : 'bg-slate-500'}`}></span>
         </div>
         <div className="flex-1">
@@ -319,7 +323,12 @@ function ChatConversation({ conversation, onBack, initialUnreadCount = 0, onRead
                     <>
                       {/* Image Message */}
                       {msgImageUrl && (
-                        <img src={msgImageUrl} alt="" className="rounded-2xl mb-1 max-h-48 object-cover w-full" />
+                        <img 
+                          src={msgImageUrl} 
+                          alt="" 
+                          className="rounded-2xl mb-1 max-h-48 object-cover w-full cursor-pointer" 
+                          onClick={() => setViewingImage(msgImageUrl)}
+                        />
                       )}
                       {/* Message Bubble */}
                       <div className={`px-4 py-2.5 rounded-2xl text-sm shadow-sm ${
@@ -425,6 +434,11 @@ function ChatConversation({ conversation, onBack, initialUnreadCount = 0, onRead
             </button>
           )}
         </form>
+      )}
+
+      {/* Image Viewer */}
+      {viewingImage && (
+        <PhotoViewerModal src={viewingImage} onClose={() => setViewingImage(null)} />
       )}
     </div>
   );

@@ -66,10 +66,15 @@ app.use(compression());
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
+// IMPORTANTE: Necessário para que o rate-limit funcione corretamente atrás de Proxies/Load Balancers (Render, Heroku, AWS, Cloudflare, etc).
+// Se isso não estiver ativo, o Express achará que todos os usuários têm o mesmo IP (o IP do Load Balancer) e bloqueará todo mundo!
+app.set('trust proxy', 1);
+
 // Rate Limiter Global: Proteção contra DDoS e brute force
+// Para escalar milhares de usuários na mesma rede (ex: universidade, NAT corporativo), o limite deve ser alto.
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 200, // Máx 200 requisições por IP por janela
+  max: 5000, // Máx 5000 requisições por IP por janela
   standardHeaders: true,
   legacyHeaders: false,
   message: {
