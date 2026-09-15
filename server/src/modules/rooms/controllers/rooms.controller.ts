@@ -92,6 +92,7 @@ export const roomsController = {
       success: true,
       data: {
         token,
+        roomId: room.id,
         roomName: room.title,
         livekitUrl: env.LIVEKIT_URL,
         isHost,
