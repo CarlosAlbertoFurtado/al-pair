@@ -81,7 +81,7 @@ export default function LoginScreen() {
             AuPairConnect
           </h1>
           <p className="text-slate-500 text-[13px] font-semibold px-4">
-            A maior comunidade global de Au Pairs.
+            Descubra o mundo. Viva o sonho. ✈️
           </p>
         </motion.div>
 
@@ -102,18 +102,18 @@ export default function LoginScreen() {
           {isRegistering && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-4 overflow-hidden">
               <div>
-                <label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Nome Completo</label>
+                <label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Como podemos te chamar?</label>
                 <input
                   type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   className="w-full px-4 py-3.5 bg-white/90 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent text-[15px] transition-all font-medium text-slate-800"
-                  placeholder="Maria Silva"
+                  placeholder="Seu nome ou apelido"
                   required
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-slate-500 mb-2 uppercase tracking-wider">Eu Sou</label>
+                <label className="block text-[11px] font-bold text-slate-500 mb-2 uppercase tracking-wider">Qual é o seu momento atual?</label>
                 <div className="grid grid-cols-1 gap-2">
                   {roles.map(r => (
                     <button
@@ -187,7 +187,7 @@ export default function LoginScreen() {
             disabled={loading || (isRegistering && !acceptedPolicies)}
             className="w-full bg-gradient-to-r from-rose-500 to-purple-600 text-white font-bold py-4 rounded-2xl transition-all disabled:opacity-50 shadow-lg shadow-rose-200/50 mt-6 text-[15px]"
           >
-            {loading ? 'Entrando...' : (isRegistering ? 'Criar Conta' : 'Entrar')}
+            {loading ? '✨ Preparando Voo...' : (isRegistering ? 'Embarcar Agora!' : 'Acessar Comunidade')}
           </motion.button>
 
           <button
@@ -195,7 +195,7 @@ export default function LoginScreen() {
             onClick={() => { setIsRegistering(!isRegistering); setError(''); }}
             className="w-full text-center text-[13px] text-slate-500 hover:text-slate-800 transition-colors font-bold mt-4"
           >
-            {isRegistering ? 'Já tem conta? Faça login' : 'Primeira vez? Crie sua conta grátis'}
+            {isRegistering ? 'Já tem sua passagem? Faça login' : 'Primeira viagem? Crie sua conta grátis'}
           </button>
 
           {!isRegistering && (
