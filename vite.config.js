@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {
-        name: 'AuPairConnect',
-        short_name: 'AuPair',
+        name: 'Au Pair Connect',
+        short_name: 'Au Pair Connect',
         description: 'Plataforma premium para Au Pairs, networking global e suporte.',
         theme_color: '#ffffff',
         display: 'standalone',
