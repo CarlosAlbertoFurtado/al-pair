@@ -172,7 +172,13 @@ app.get('/api/health/media', async (_req, res) => {
 });
 
 // Metrics endpoint for Prometheus
-app.get('/api/metrics', async (_req, res) => {
+app.get('/api/metrics', async (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1] || req.query.token;
+  if (token !== (process.env.METRICS_TOKEN || 'aupair-metrics-secret')) {
+    res.status(401).json({ success: false, message: 'Unauthorized' });
+    return;
+  }
+
   try {
     const metrics = await client.register.metrics();
     res.set('Content-Type', client.register.contentType);

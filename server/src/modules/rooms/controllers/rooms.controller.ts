@@ -10,9 +10,11 @@ import { prisma } from '../../../config/database.js';
 import type { AuthRequest } from '../../../middleware/authenticate.js';
 
 export const roomsController = {
-  async listRooms(_req: Request, res: Response): Promise<void> {
-    const rooms = await roomsService.listRooms();
-    res.status(200).json({ success: true, data: { rooms } });
+  async listRooms(req: Request, res: Response): Promise<void> {
+    const cursor = req.query.cursor as string | undefined;
+    const rooms = await roomsService.listRooms(cursor);
+    const nextCursor = rooms.length === 50 ? rooms[49].id : null;
+    res.status(200).json({ success: true, data: { rooms, nextCursor } });
   },
 
   async createRoom(req: AuthRequest, res: Response): Promise<void> {

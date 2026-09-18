@@ -13,8 +13,11 @@ export const roomsService = {
   /**
    * Lista todas as salas ativas ou agendadas.
    */
-  async listRooms() {
+  async listRooms(cursor?: string) {
     return prisma.room.findMany({
+      take: 50,
+      skip: cursor ? 1 : 0,
+      cursor: cursor ? { id: cursor } : undefined,
       where: {
         status: { in: ['LIVE', 'SCHEDULED'] },
       },
