@@ -3,34 +3,6 @@ import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { motion } from 'framer-motion';
 
-const Cloud = ({ delay, duration, y, scale, opacity }) => (
-  <motion.div
-    initial={{ x: '110vw' }}
-    animate={{ x: '-50vw' }}
-    transition={{ repeat: Infinity, duration, delay, ease: 'linear' }}
-    className="absolute pointer-events-none"
-    style={{ top: y, scale, opacity, zIndex: opacity > 0.5 ? 10 : 0 }}
-  >
-    <svg width="250" height="150" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-      <path d="M17.5 19c2.485 0 4.5-2.015 4.5-4.5 0-2.435-1.93-4.417-4.346-4.496-.46-3.23-3.226-5.754-6.654-5.754-3.613 0-6.55 2.85-6.65 6.423C2.102 11.233 0 13.045 0 15.5 0 17.985 2.015 20 4.5 20h13z" />
-    </svg>
-  </motion.div>
-);
-
-const Plane = ({ delay, duration, y, scale }) => (
-  <motion.div
-    initial={{ x: '110vw' }}
-    animate={{ x: '-50vw' }}
-    transition={{ repeat: Infinity, duration, delay, ease: 'linear' }}
-    className="absolute pointer-events-none text-white/40"
-    style={{ top: y, scale, zIndex: 1 }}
-  >
-    <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'rotate(-90deg)' }}>
-      <path d="M21,16V14L13,9V3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5V9L2,14V16L10,13.5V19L8,20.5V22L11.5,21L15,22V20.5L13,19V13.5L21,16Z" />
-    </svg>
-  </motion.div>
-);
-
 export default function LoginScreen() {
   const { login } = useAuthStore();
   const [isRegistering, setIsRegistering] = useState(false);
@@ -70,68 +42,59 @@ export default function LoginScreen() {
   ];
 
   return (
-    <div className="relative w-full min-h-screen overflow-x-hidden overflow-y-auto bg-gradient-to-b from-sky-400 via-sky-200 to-rose-100 flex flex-col items-center py-10 px-4">
+    <div className="relative w-full min-h-screen overflow-x-hidden overflow-y-auto bg-gradient-to-br from-rose-50 via-white to-purple-50 flex flex-col items-center py-12 px-4">
       
-      {/* Cenário Animado do Céu */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {/* Nuvens Fundo (Lentas e pequenas) */}
-        <Cloud delay={0} duration={60} y="5%" scale={0.5} opacity={0.4} />
-        <Cloud delay={20} duration={55} y="25%" scale={0.4} opacity={0.3} />
-        <Cloud delay={40} duration={70} y="45%" scale={0.6} opacity={0.5} />
-        
-        {/* Aviões */}
-        <Plane delay={15} duration={25} y="15%" scale={0.8} />
-        <Plane delay={45} duration={35} y="60%" scale={0.5} />
-        <Plane delay={5} duration={15} y="80%" scale={1.2} />
+      {/* Círculos de luz suaves no fundo (Ambient Lighting) */}
+      <motion.div 
+        animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        className="fixed -top-32 -left-32 w-96 h-96 bg-rose-200/50 rounded-full blur-3xl pointer-events-none"
+      />
+      <motion.div 
+        animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+        className="fixed top-1/2 -right-32 w-[30rem] h-[30rem] bg-purple-200/50 rounded-full blur-3xl pointer-events-none -translate-y-1/2"
+      />
 
-        {/* Nuvens Frente (Rápidas e grandes, passando na frente do conteúdo) */}
-        <Cloud delay={10} duration={30} y="70%" scale={1.2} opacity={0.8} />
-        <Cloud delay={35} duration={40} y="85%" scale={1.5} opacity={0.9} />
-      </div>
-
-      <div className="relative z-20 w-full max-w-sm flex flex-col items-center pb-12">
+      <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
         
-        {/* Imagem Épica da Cegonha Flutuando */}
+        {/* Logo Original Animada */}
         <motion.div
-          initial={{ y: -100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", duration: 1.5, bounce: 0.4 }}
-          className="mb-4 relative w-full"
+          initial={{ y: -30, opacity: 0, scale: 0.9 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          transition={{ type: "spring", duration: 1, bounce: 0.5 }}
+          className="mb-8 relative"
         >
-          <motion.div
-            animate={{ y: [0, -12, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="w-full aspect-[4/3] rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden border-4 border-white/60 bg-white/30 backdrop-blur-sm"
-          >
-            <img src="/stork_discovery_flight.jpg" alt="Alegria e Descoberta" className="w-full h-full object-cover" />
-          </motion.div>
+          <div className="w-24 h-24 bg-white rounded-[2rem] shadow-xl shadow-rose-200/50 flex items-center justify-center p-2 border border-white relative z-20">
+            <img src="/icon-192.png" alt="AuPairConnect Logo" className="w-full h-full object-cover rounded-2xl" />
+          </div>
         </motion.div>
 
-        {/* Título animado */}
+        {/* Título */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.8 }}
-          className="text-center mb-6 w-full"
+          transition={{ delay: 0.2, duration: 0.6 }}
+          className="text-center mb-8 w-full"
         >
-          <h1 className="text-[2.2rem] font-black text-slate-800 tracking-tight leading-none mb-2 drop-shadow-md">
+          <h1 className="text-[2rem] font-black tracking-tight bg-gradient-to-r from-rose-500 to-purple-600 bg-clip-text text-transparent mb-2">
             AuPairConnect
           </h1>
-          <p className="text-slate-700 text-sm font-bold bg-white/40 inline-block px-4 py-1.5 rounded-full backdrop-blur-sm shadow-sm border border-white/50">
-            Descubra o mundo. Viva o sonho. ✈️
+          <p className="text-slate-500 text-[13px] font-semibold px-4">
+            A maior comunidade global de Au Pairs.
           </p>
         </motion.div>
 
-        {/* Formulário deslizando para cima */}
+        {/* Formulário (Glassmorphism) */}
         <motion.form 
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.8, type: "spring" }}
+          transition={{ delay: 0.4, duration: 0.6 }}
           onSubmit={handleSubmit} 
-          className="w-full bg-white/80 backdrop-blur-2xl p-6 rounded-[2rem] shadow-2xl border border-white space-y-4 relative z-30"
+          className="w-full bg-white/70 backdrop-blur-xl p-7 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 space-y-4"
         >
           {error && (
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-rose-50 text-rose-600 p-3 rounded-xl text-sm font-bold text-center border border-rose-100">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-rose-50 text-rose-600 p-3 rounded-xl text-[13px] font-bold text-center border border-rose-100">
               {error}
             </motion.div>
           )}
@@ -139,18 +102,18 @@ export default function LoginScreen() {
           {isRegistering && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-4 overflow-hidden">
               <div>
-                <label className="block text-[11px] font-black text-slate-700 mb-1 ml-1 uppercase tracking-wider">Como podemos te chamar?</label>
+                <label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Nome Completo</label>
                 <input
                   type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full px-4 py-3.5 bg-white/90 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent text-sm transition-all shadow-sm font-semibold"
-                  placeholder="Seu nome ou apelido"
+                  className="w-full px-4 py-3.5 bg-white/90 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent text-[15px] transition-all font-medium text-slate-800"
+                  placeholder="Maria Silva"
                   required
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-black text-slate-700 mb-2 ml-1 uppercase tracking-wider">Qual é o seu momento atual?</label>
+                <label className="block text-[11px] font-bold text-slate-500 mb-2 uppercase tracking-wider">Eu Sou</label>
                 <div className="grid grid-cols-1 gap-2">
                   {roles.map(r => (
                     <button
@@ -159,16 +122,16 @@ export default function LoginScreen() {
                       onClick={() => setRole(r.value)}
                       className={`flex items-center gap-3 rounded-2xl border p-3.5 text-left transition-all ${
                         role === r.value
-                          ? 'border-sky-400 bg-gradient-to-r from-sky-50 to-blue-50 text-sky-700 shadow-md transform scale-[1.02]'
-                          : 'border-slate-200 bg-white/90 text-slate-600 hover:border-slate-300'
+                          ? 'border-rose-400 bg-gradient-to-r from-rose-50 to-purple-50 text-rose-700 shadow-sm'
+                          : 'border-slate-100 bg-white/80 text-slate-600 hover:border-slate-200'
                       }`}
                     >
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-xl shadow-sm border border-slate-100">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-xl shadow-sm border border-slate-50">
                         {r.icon}
                       </span>
                       <span>
-                        <span className="block text-sm font-black text-slate-800">{r.label}</span>
-                        <span className="block text-xs font-semibold text-slate-500 leading-tight mt-0.5">{r.desc}</span>
+                        <span className="block text-[14px] font-bold text-slate-800">{r.label}</span>
+                        <span className="block text-[11px] font-medium text-slate-500 leading-tight mt-0.5">{r.desc}</span>
                       </span>
                     </button>
                   ))}
@@ -178,24 +141,24 @@ export default function LoginScreen() {
           )}
 
           <div>
-            <label className="block text-[11px] font-black text-slate-700 mb-1 ml-1 uppercase tracking-wider">Email</label>
+            <label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3.5 bg-white/90 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent text-sm transition-all shadow-sm font-semibold"
+              className="w-full px-4 py-3.5 bg-white/90 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent text-[15px] transition-all font-medium text-slate-800"
               placeholder="seu@email.com"
               required
             />
           </div>
 
           <div>
-            <label className="block text-[11px] font-black text-slate-700 mb-1 ml-1 uppercase tracking-wider">Senha</label>
+            <label className="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Senha</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3.5 bg-white/90 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent text-sm transition-all shadow-sm font-semibold"
+              className="w-full px-4 py-3.5 bg-white/90 border border-slate-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent text-[15px] transition-all font-medium text-slate-800"
               placeholder="••••••••"
               required
               minLength={6}
@@ -203,42 +166,42 @@ export default function LoginScreen() {
           </div>
 
           {isRegistering && (
-            <label className="flex items-start gap-3 p-3.5 bg-sky-50/50 rounded-2xl text-[11px] text-slate-600 border border-sky-100/50">
+            <label className="flex items-start gap-3 p-3 bg-slate-50/80 rounded-2xl text-[11px] text-slate-500 border border-slate-100/50 mt-2">
               <input
                 type="checkbox"
                 checked={acceptedPolicies}
                 onChange={(e) => setAcceptedPolicies(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-sky-500 focus:ring-sky-400"
+                className="mt-0.5 h-4 w-4 rounded border-slate-200 text-rose-500 focus:ring-rose-400"
                 required
               />
-              <span className="leading-relaxed font-medium">
-                Li e aceito os <Link to="/legal/terms" className="font-bold text-sky-600 hover:text-sky-700 underline">Termos</Link>, a <Link to="/legal/privacy" className="font-bold text-sky-600 hover:text-sky-700 underline">Privacidade</Link> e as <Link to="/legal/community" className="font-bold text-sky-600 hover:text-sky-700 underline">Regras da Comunidade</Link>.
+              <span className="leading-relaxed">
+                Li e aceito os <Link to="/legal/terms" className="font-bold text-slate-700 hover:text-rose-500 transition-colors">Termos</Link>, a <Link to="/legal/privacy" className="font-bold text-slate-700 hover:text-rose-500 transition-colors">Privacidade</Link> e as <Link to="/legal/community" className="font-bold text-slate-700 hover:text-rose-500 transition-colors">Regras</Link>.
               </span>
             </label>
           )}
 
           <motion.button
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={loading || (isRegistering && !acceptedPolicies)}
-            className="w-full bg-gradient-to-r from-sky-400 to-blue-500 text-white font-black py-4 rounded-2xl transition-all disabled:opacity-50 shadow-xl shadow-sky-200 mt-4 text-[15px]"
+            className="w-full bg-gradient-to-r from-rose-500 to-purple-600 text-white font-bold py-4 rounded-2xl transition-all disabled:opacity-50 shadow-lg shadow-rose-200/50 mt-6 text-[15px]"
           >
-            {loading ? '✨ Preparando Voo...' : (isRegistering ? 'Embarcar Agora!' : 'Acessar Comunidade')}
+            {loading ? 'Entrando...' : (isRegistering ? 'Criar Conta' : 'Entrar')}
           </motion.button>
 
           <button
             type="button"
             onClick={() => { setIsRegistering(!isRegistering); setError(''); }}
-            className="w-full text-center text-[13px] text-slate-600 hover:text-slate-900 transition-colors font-bold mt-4"
+            className="w-full text-center text-[13px] text-slate-500 hover:text-slate-800 transition-colors font-bold mt-4"
           >
-            {isRegistering ? 'Já tem sua passagem? Faça login' : 'Primeira viagem? Crie sua conta grátis'}
+            {isRegistering ? 'Já tem conta? Faça login' : 'Primeira vez? Crie sua conta grátis'}
           </button>
 
           {!isRegistering && (
             <Link
               to="/forgot-password"
-              className="block w-full text-center text-xs text-slate-400 hover:text-sky-500 transition-colors font-semibold mt-2"
+              className="block w-full text-center text-xs text-slate-400 hover:text-rose-500 transition-colors font-semibold mt-2"
             >
               Esqueci minha senha
             </Link>
