@@ -54,7 +54,7 @@ export default function InstallPrompt() {
       </button>
       
       <div className="flex items-center gap-3">
-        <img src="/pwa-192x192.png" alt="AuPairConnect" className="w-12 h-12 rounded-xl object-cover" />
+        <img src="/icon-192.png" alt="AuPairConnect" className="w-12 h-12 rounded-xl object-cover" />
         <div className="flex-1">
           <h3 className="font-bold text-gray-900 leading-tight">AuPairConnect</h3>
           <p className="text-sm text-gray-500">Instale o app oficial</p>
