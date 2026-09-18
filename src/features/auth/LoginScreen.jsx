@@ -3,6 +3,34 @@ import { Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { motion } from 'framer-motion';
 
+const Cloud = ({ delay, duration, y, scale, opacity }) => (
+  <motion.div
+    initial={{ x: '110vw' }}
+    animate={{ x: '-50vw' }}
+    transition={{ repeat: Infinity, duration, delay, ease: 'linear' }}
+    className="absolute pointer-events-none"
+    style={{ top: y, scale, opacity, zIndex: opacity > 0.5 ? 10 : 0 }}
+  >
+    <svg width="250" height="150" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+      <path d="M17.5 19c2.485 0 4.5-2.015 4.5-4.5 0-2.435-1.93-4.417-4.346-4.496-.46-3.23-3.226-5.754-6.654-5.754-3.613 0-6.55 2.85-6.65 6.423C2.102 11.233 0 13.045 0 15.5 0 17.985 2.015 20 4.5 20h13z" />
+    </svg>
+  </motion.div>
+);
+
+const Plane = ({ delay, duration, y, scale }) => (
+  <motion.div
+    initial={{ x: '110vw' }}
+    animate={{ x: '-50vw' }}
+    transition={{ repeat: Infinity, duration, delay, ease: 'linear' }}
+    className="absolute pointer-events-none text-white/40"
+    style={{ top: y, scale, zIndex: 1 }}
+  >
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'rotate(-90deg)' }}>
+      <path d="M21,16V14L13,9V3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5V9L2,14V16L10,13.5V19L8,20.5V22L11.5,21L15,22V20.5L13,19V13.5L21,16Z" />
+    </svg>
+  </motion.div>
+);
+
 export default function LoginScreen() {
   const { login } = useAuthStore();
   const [isRegistering, setIsRegistering] = useState(false);
@@ -42,48 +70,41 @@ export default function LoginScreen() {
   ];
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-rose-50 to-indigo-50 flex items-center justify-center p-6">
+    <div className="relative w-full min-h-screen overflow-x-hidden overflow-y-auto bg-gradient-to-b from-sky-400 via-sky-200 to-rose-100 flex flex-col items-center py-10 px-4">
       
-      {/* Fundo Animado (Esferas flutuantes de Transformação) */}
-      <motion.div 
-        animate={{ y: [0, -30, 0], opacity: [0.3, 0.6, 0.3], scale: [1, 1.1, 1] }}
-        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute -top-20 -left-20 w-72 h-72 bg-rose-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30"
-      />
-      <motion.div 
-        animate={{ y: [0, 40, 0], opacity: [0.2, 0.5, 0.2], x: [0, -20, 0] }}
-        transition={{ duration: 9, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute top-40 -right-20 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30"
-      />
-      <motion.div 
-        animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2], x: [0, 20, 0] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        className="absolute -bottom-20 left-20 w-96 h-96 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30"
-      />
-
-      <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
+      {/* Cenário Animado do Céu */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {/* Nuvens Fundo (Lentas e pequenas) */}
+        <Cloud delay={0} duration={60} y="5%" scale={0.5} opacity={0.4} />
+        <Cloud delay={20} duration={55} y="25%" scale={0.4} opacity={0.3} />
+        <Cloud delay={40} duration={70} y="45%" scale={0.6} opacity={0.5} />
         
-        {/* Animação de Entrada e Voo da Cegonha */}
+        {/* Aviões */}
+        <Plane delay={15} duration={25} y="15%" scale={0.8} />
+        <Plane delay={45} duration={35} y="60%" scale={0.5} />
+        <Plane delay={5} duration={15} y="80%" scale={1.2} />
+
+        {/* Nuvens Frente (Rápidas e grandes, passando na frente do conteúdo) */}
+        <Cloud delay={10} duration={30} y="70%" scale={1.2} opacity={0.8} />
+        <Cloud delay={35} duration={40} y="85%" scale={1.5} opacity={0.9} />
+      </div>
+
+      <div className="relative z-20 w-full max-w-sm flex flex-col items-center pb-12">
+        
+        {/* Imagem Épica da Cegonha Flutuando */}
         <motion.div
-          initial={{ y: -100, x: -50, opacity: 0, scale: 0.5, rotate: -15 }}
-          animate={{ y: 0, x: 0, opacity: 1, scale: 1, rotate: 0 }}
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
           transition={{ type: "spring", duration: 1.5, bounce: 0.4 }}
-          className="mb-4 relative"
+          className="mb-4 relative w-full"
         >
-          {/* Movimento contínuo flutuante de voo (Corpo da Cegonha) */}
           <motion.div
             animate={{ y: [0, -12, 0] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-            className="w-24 h-24 bg-white rounded-3xl shadow-2xl shadow-rose-200 flex items-center justify-center p-1.5 border border-white relative z-20"
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="w-full aspect-[4/3] rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden border-4 border-white/60 bg-white/30 backdrop-blur-sm"
           >
-            <img src="/icon-192.png" alt="Cegonha AuPairConnect" className="w-full h-full object-cover rounded-2xl" />
+            <img src="/stork_discovery_flight.jpg" alt="Alegria e Descoberta" className="w-full h-full object-cover" />
           </motion.div>
-          {/* Sombra dinâmica embaixo da Cegonha */}
-          <motion.div
-            animate={{ scale: [1, 0.8, 1], opacity: [0.3, 0.1, 0.3] }}
-            transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-16 h-2 bg-slate-400 rounded-full blur-sm z-10"
-          />
         </motion.div>
 
         {/* Título animado */}
@@ -91,13 +112,13 @@ export default function LoginScreen() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.8 }}
-          className="text-center mb-8"
+          className="text-center mb-6 w-full"
         >
-          <h1 className="text-3xl font-black bg-gradient-to-r from-rose-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent mb-2 tracking-tight">
+          <h1 className="text-[2.2rem] font-black text-slate-800 tracking-tight leading-none mb-2 drop-shadow-md">
             AuPairConnect
           </h1>
-          <p className="text-slate-600 text-sm font-medium px-4">
-            Sua jornada começa aqui. <br/>Voe alto pelo mundo! ✈️
+          <p className="text-slate-700 text-sm font-bold bg-white/40 inline-block px-4 py-1.5 rounded-full backdrop-blur-sm shadow-sm border border-white/50">
+            Descubra o mundo. Viva o sonho. ✈️
           </p>
         </motion.div>
 
@@ -107,7 +128,7 @@ export default function LoginScreen() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.8, type: "spring" }}
           onSubmit={handleSubmit} 
-          className="w-full bg-white/70 backdrop-blur-xl p-6 rounded-[2rem] shadow-xl border border-white space-y-4"
+          className="w-full bg-white/80 backdrop-blur-2xl p-6 rounded-[2rem] shadow-2xl border border-white space-y-4 relative z-30"
         >
           {error && (
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-rose-50 text-rose-600 p-3 rounded-xl text-sm font-bold text-center border border-rose-100">
@@ -118,36 +139,36 @@ export default function LoginScreen() {
           {isRegistering && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-4 overflow-hidden">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1 ml-1 uppercase tracking-wider">Nome Completo</label>
+                <label className="block text-[11px] font-black text-slate-700 mb-1 ml-1 uppercase tracking-wider">Como podemos te chamar?</label>
                 <input
                   type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent text-sm transition-all"
-                  placeholder="Maria Silva"
+                  className="w-full px-4 py-3.5 bg-white/90 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent text-sm transition-all shadow-sm font-semibold"
+                  placeholder="Seu nome ou apelido"
                   required
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-2 ml-1 uppercase tracking-wider">Eu Sou</label>
+                <label className="block text-[11px] font-black text-slate-700 mb-2 ml-1 uppercase tracking-wider">Qual é o seu momento atual?</label>
                 <div className="grid grid-cols-1 gap-2">
                   {roles.map(r => (
                     <button
                       type="button"
                       key={r.value}
                       onClick={() => setRole(r.value)}
-                      className={`flex items-center gap-3 rounded-2xl border p-3 text-left transition-all ${
+                      className={`flex items-center gap-3 rounded-2xl border p-3.5 text-left transition-all ${
                         role === r.value
-                          ? 'border-rose-400 bg-gradient-to-r from-rose-50 to-purple-50 text-rose-700 shadow-sm'
-                          : 'border-slate-200 bg-white/80 text-slate-600 hover:border-slate-300'
+                          ? 'border-sky-400 bg-gradient-to-r from-sky-50 to-blue-50 text-sky-700 shadow-md transform scale-[1.02]'
+                          : 'border-slate-200 bg-white/90 text-slate-600 hover:border-slate-300'
                       }`}
                     >
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-xl shadow-sm">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-xl shadow-sm border border-slate-100">
                         {r.icon}
                       </span>
                       <span>
-                        <span className="block text-sm font-black">{r.label}</span>
-                        <span className="block text-[11px] font-semibold opacity-70 leading-tight mt-0.5">{r.desc}</span>
+                        <span className="block text-sm font-black text-slate-800">{r.label}</span>
+                        <span className="block text-xs font-semibold text-slate-500 leading-tight mt-0.5">{r.desc}</span>
                       </span>
                     </button>
                   ))}
@@ -157,24 +178,24 @@ export default function LoginScreen() {
           )}
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1 ml-1 uppercase tracking-wider">Email</label>
+            <label className="block text-[11px] font-black text-slate-700 mb-1 ml-1 uppercase tracking-wider">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent text-sm transition-all"
+              className="w-full px-4 py-3.5 bg-white/90 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent text-sm transition-all shadow-sm font-semibold"
               placeholder="seu@email.com"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1 ml-1 uppercase tracking-wider">Senha</label>
+            <label className="block text-[11px] font-black text-slate-700 mb-1 ml-1 uppercase tracking-wider">Senha</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 bg-white/80 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-rose-400 focus:border-transparent text-sm transition-all"
+              className="w-full px-4 py-3.5 bg-white/90 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-sky-400 focus:border-transparent text-sm transition-all shadow-sm font-semibold"
               placeholder="••••••••"
               required
               minLength={6}
@@ -182,16 +203,16 @@ export default function LoginScreen() {
           </div>
 
           {isRegistering && (
-            <label className="flex items-start gap-3 p-3 bg-slate-50/80 rounded-xl text-[11px] text-slate-600">
+            <label className="flex items-start gap-3 p-3.5 bg-sky-50/50 rounded-2xl text-[11px] text-slate-600 border border-sky-100/50">
               <input
                 type="checkbox"
                 checked={acceptedPolicies}
                 onChange={(e) => setAcceptedPolicies(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-rose-500 focus:ring-rose-400"
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-sky-500 focus:ring-sky-400"
                 required
               />
-              <span className="leading-tight">
-                Li e aceito os <Link to="/legal/terms" className="font-bold text-rose-600 hover:text-rose-700">Termos</Link>, a <Link to="/legal/privacy" className="font-bold text-rose-600 hover:text-rose-700">Privacidade</Link> e <Link to="/legal/community" className="font-bold text-rose-600 hover:text-rose-700">Regras</Link>.
+              <span className="leading-relaxed font-medium">
+                Li e aceito os <Link to="/legal/terms" className="font-bold text-sky-600 hover:text-sky-700 underline">Termos</Link>, a <Link to="/legal/privacy" className="font-bold text-sky-600 hover:text-sky-700 underline">Privacidade</Link> e as <Link to="/legal/community" className="font-bold text-sky-600 hover:text-sky-700 underline">Regras da Comunidade</Link>.
               </span>
             </label>
           )}
@@ -201,23 +222,23 @@ export default function LoginScreen() {
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={loading || (isRegistering && !acceptedPolicies)}
-            className="w-full bg-gradient-to-r from-rose-500 via-purple-500 to-indigo-500 text-white font-bold py-3.5 rounded-2xl transition-all disabled:opacity-50 shadow-lg shadow-rose-200/50 mt-2 text-sm"
+            className="w-full bg-gradient-to-r from-sky-400 to-blue-500 text-white font-black py-4 rounded-2xl transition-all disabled:opacity-50 shadow-xl shadow-sky-200 mt-4 text-[15px]"
           >
-            {loading ? '✨ Preparando voo...' : (isRegistering ? 'Criar Conta' : 'Entrar na Comunidade')}
+            {loading ? '✨ Preparando Voo...' : (isRegistering ? 'Embarcar Agora!' : 'Acessar Comunidade')}
           </motion.button>
 
           <button
             type="button"
             onClick={() => { setIsRegistering(!isRegistering); setError(''); }}
-            className="w-full text-center text-sm text-slate-600 hover:text-slate-800 transition-colors font-bold mt-2"
+            className="w-full text-center text-[13px] text-slate-600 hover:text-slate-900 transition-colors font-bold mt-4"
           >
-            {isRegistering ? 'Já tem conta? Faça login' : 'Primeira vez? Crie sua conta grátis'}
+            {isRegistering ? 'Já tem sua passagem? Faça login' : 'Primeira viagem? Crie sua conta grátis'}
           </button>
 
           {!isRegistering && (
             <Link
               to="/forgot-password"
-              className="block w-full text-center text-xs text-slate-500 hover:text-rose-500 transition-colors font-medium mt-1"
+              className="block w-full text-center text-xs text-slate-400 hover:text-sky-500 transition-colors font-semibold mt-2"
             >
               Esqueci minha senha
             </Link>
