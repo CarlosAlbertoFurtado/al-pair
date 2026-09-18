@@ -15,21 +15,5 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     
-    <!-- Security: Anti-Inspect / Anti-DevTools -->
-    <script>
-      // Desabilitar teclas de atalho de inspeção (F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U)
-      document.onkeydown = function(e) {
-        if(event.keyCode == 123) { return false; }
-        if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { return false; }
-        if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { return false; }
-        if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { return false; }
-        if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { return false; }
-      }
-      
-      // Loop infinito com debugger para travar o DevTools caso seja aberto à força
-      setInterval(function() {
-        (function (a) {return (function (a) {return (Function('Function(arguments[0]+"'+a+'")()'))})(a)})('bugger')('de');
-      }, 1000);
-    </script>
   </body>
 </html>
