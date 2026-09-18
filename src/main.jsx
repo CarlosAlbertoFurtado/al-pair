@@ -5,6 +5,10 @@ import './index.css'
 import 'leaflet/dist/leaflet.css'
 import App from './App.jsx'
 
+// Registra o Service Worker do PWA
+import { registerSW } from 'virtual:pwa-register'
+registerSW({ immediate: true })
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
