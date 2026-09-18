@@ -15,6 +15,8 @@ export default defineConfig({
         short_name: 'AuPair',
         description: 'Plataforma premium para Au Pairs, networking global e suporte.',
         theme_color: '#ffffff',
+        display: 'standalone',
+        start_url: '/',
         icons: [
           {
             src: 'pwa-192x192.png',

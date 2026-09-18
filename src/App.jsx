@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/useAuthStore';
 import { useAudioRoomStore } from './store/useAudioRoomStore';
 import { LoadingSpinner } from './components/LoadingSpinner';
+import InstallPrompt from './components/InstallPrompt';
 
 // Layout
 import MainLayout from './components/layout/MainLayout';
@@ -78,6 +79,9 @@ export default function App() {
       {activeRoom && isAuthenticated && (
         <LiveRoom roomData={activeRoom} onLeave={clearRoom} />
       )}
+
+      {/* PWA Install Prompt */}
+      <InstallPrompt />
     </Suspense>
   );
 }
