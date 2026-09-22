@@ -285,7 +285,7 @@ export default function CreatePostModal({ onClose, onSuccess }) {
         <ImageAdjustModal
           file={selectedImageFile}
           title="Ajustar foto do post"
-          aspectRatio={16 / 9}
+          aspectRatio={4 / 5}
           onCancel={() => setSelectedImageFile(null)}
           onConfirm={uploadAdjustedImage}
         />
