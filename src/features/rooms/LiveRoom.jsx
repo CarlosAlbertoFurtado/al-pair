@@ -179,6 +179,8 @@ function RoomPanel({ room, onLeave }) {
         await roomsAPI.leave(room.roomId);
       }
     } catch (e) { console.warn('exit err', e); }
+    // Notifica qualquer componente que a lista de salas mudou
+    window.dispatchEvent(new CustomEvent('rooms:changed'));
     onLeave();
   };
 

@@ -168,8 +168,23 @@ export default function AudioRooms() {
 
   useEffect(() => {
     fetchRooms();
-    const interval = setInterval(fetchRooms, 15000); // Atualiza a lista a cada 15s
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchRooms, 5000); // Atualiza a lista a cada 5s
+
+    // Re-fetch imediato ao voltar para a aba
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') fetchRooms();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    // Re-fetch imediato quando alguma sala for encerrada/saída
+    const handleRoomsChanged = () => fetchRooms();
+    window.addEventListener('rooms:changed', handleRoomsChanged);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('rooms:changed', handleRoomsChanged);
+    };
   }, []);
 
   const handleJoin = async (room) => {
@@ -181,6 +196,12 @@ export default function AudioRooms() {
       const res = await roomsAPI.getToken(room.id);
       setActiveRoom(res.data.data);
     } catch (err) {
+      const status = err?.response?.status;
+      // Sala já foi encerrada/deletada: remove da lista local e re-fetch
+      if (status === 404 || status === 410) {
+        setRooms(prev => prev.filter(r => r.id !== room.id));
+        fetchRooms();
+      }
       alert(err?.response?.data?.message || 'Não foi possível entrar na sala.');
     } finally {
       setJoiningId(null);
