@@ -12,9 +12,10 @@ const roomServiceLiveKit = new RoomServiceClient(env.LIVEKIT_URL, env.LIVEKIT_AP
 export const roomsService = {
   /**
    * Lista todas as salas ativas ou agendadas.
+   * IMPORTANTE: Cruza com o LiveKit para deletar salas-zumbi automaticamente.
    */
   async listRooms(cursor?: string) {
-    return prisma.room.findMany({
+    const rooms = await prisma.room.findMany({
       take: 50,
       skip: cursor ? 1 : 0,
       cursor: cursor ? { id: cursor } : undefined,
@@ -29,12 +30,42 @@ export const roomsService = {
         participantCount: true,
         maxParticipants: true,
         scheduledAt: true,
+        startedAt: true,
+        hostId: true,
         host: {
           select: { id: true, displayName: true, avatarUrl: true },
         },
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    // Busca as salas realmente ativas no LiveKit
+    let liveKitRoomNames: Set<string> = new Set();
+    try {
+      const lkRooms = await roomServiceLiveKit.listRooms();
+      liveKitRoomNames = new Set(lkRooms.map((r: any) => r.name));
+    } catch (err) {
+      // Se não conseguir conectar ao LiveKit, retorna o que tem no banco sem filtrar
+      console.warn('[listRooms] Falha ao consultar LiveKit, retornando dados do banco:', err);
+      return rooms;
+    }
+
+    // Filtra e deleta salas-zumbi (LIVE no banco, mas inexistentes no LiveKit)
+    const validRooms = [];
+    for (const room of rooms) {
+      if (room.status === 'LIVE' && room.startedAt) {
+        const minutesSinceStart = (Date.now() - new Date(room.startedAt).getTime()) / 60000;
+        if (minutesSinceStart > 1 && !liveKitRoomNames.has(room.id)) {
+          // Sala-zumbi detectada! Deletar do banco de dados.
+          console.log(`[listRooms] Sala-zumbi detectada e removida: ${room.id} (${room.title})`);
+          await prisma.room.delete({ where: { id: room.id } }).catch(() => {});
+          continue; // Não inclui na lista retornada
+        }
+      }
+      validRooms.push(room);
+    }
+
+    return validRooms;
   },
 
   /**
