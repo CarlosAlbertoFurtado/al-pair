@@ -22,7 +22,7 @@ function PostSkeleton() {
         <div className="h-3 bg-slate-200 rounded w-full"></div>
         <div className="h-3 bg-slate-200 rounded w-5/6"></div>
       </div>
-      <div className="w-full aspect-video bg-slate-200 rounded-xl mb-4"></div>
+      <div className="w-full h-[300px] bg-slate-200 rounded-2xl mb-4"></div>
       <div className="flex justify-between items-center">
         <div className="flex gap-4">
           <div className="w-6 h-6 bg-slate-200 rounded"></div>
@@ -194,16 +194,17 @@ export function PostCard({ post, onDelete }) {
 
       {/* Image with Double Tap */}
       {imageUrl && (
-        <div 
-          className="relative w-full aspect-video select-none"
-          onDoubleClick={handleDoubleTap}
-        >
-          <img 
-            src={imageUrl}
-            alt="" 
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
+        <div className="px-4 mb-2">
+          <div 
+            className="relative w-full rounded-2xl overflow-hidden select-none bg-slate-100 border border-slate-100/50"
+            onDoubleClick={handleDoubleTap}
+          >
+            <img 
+              src={imageUrl}
+              alt="" 
+              className="w-full max-h-[550px] object-cover"
+              loading="lazy"
+            />
           {/* Big Heart Animation on Double Tap */}
           {showHeartAnim && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
