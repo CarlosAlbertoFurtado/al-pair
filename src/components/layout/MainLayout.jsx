@@ -95,11 +95,11 @@ export default function MainLayout() {
   const toggleDrawer = () => setIsDrawerOpen(prev => !prev);
 
   const DrawerLink = ({ icon: Icon, label, to, badge, badgeTone = 'rose' }) => (
-    <button onClick={() => { setIsDrawerOpen(false); navigate(to); }} className="flex items-center gap-4 w-full p-3 text-slate-300 hover:text-white hover:bg-slate-800/50 rounded-xl transition-colors active:scale-95">
+    <button onClick={() => { setIsDrawerOpen(false); navigate(to); }} className="flex items-center gap-4 w-full p-3 text-slate-700 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors active:scale-95">
       <Icon size={22} className="text-slate-400" />
       <span className="text-sm font-semibold flex-1 text-left">{label}</span>
       {badge && <span className={`${badgeTone === 'green' ? 'bg-emerald-500' : 'bg-rose-500'} text-white text-[9px] font-black px-2 py-0.5 rounded-full`}>{badge}</span>}
-      <ChevronRight size={16} className="text-slate-600" />
+      <ChevronRight size={16} className="text-slate-400" />
     </button>
   );
 
@@ -137,9 +137,9 @@ export default function MainLayout() {
       )}
 
       {/* Drawer Menu - z-index mais alto que tudo */}
-      <div className={`fixed top-0 left-0 h-full w-[85%] max-w-[320px] bg-slate-900 z-[70] shadow-2xl flex flex-col transition-transform duration-300 ease-in-out transform ${isDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed top-0 left-0 h-full w-[85%] max-w-[320px] bg-white z-[70] shadow-2xl flex flex-col transition-transform duration-300 ease-in-out transform ${isDrawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         {/* Drawer Header */}
-        <div className="bg-gradient-to-b from-slate-800 to-slate-900 p-6 pt-10 border-b border-slate-800">
+        <div className="bg-gradient-to-br from-rose-50 via-white to-purple-50 p-6 pt-10 border-b border-slate-100">
           <div className="flex justify-between items-start mb-4">
             <button onClick={() => { setIsDrawerOpen(false); navigate('/profile'); }} className="w-16 h-16 rounded-full bg-gradient-to-tr from-rose-500 to-purple-600 p-[2px] active:scale-95 transition-transform">
               <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center overflow-hidden">
@@ -150,25 +150,25 @@ export default function MainLayout() {
                 )}
               </div>
             </button>
-            <button onClick={() => setIsDrawerOpen(false)} className="p-2 bg-slate-800/50 rounded-full text-slate-400 hover:text-white active:scale-90">
+            <button onClick={() => setIsDrawerOpen(false)} className="p-2 bg-white/50 rounded-full text-slate-500 hover:text-rose-600 hover:bg-rose-100 active:scale-90">
               <X size={20} />
             </button>
           </div>
-          <h2 className="text-white text-xl font-bold">{user?.displayName || 'Olá, Au Pair'}</h2>
-          <p className="text-slate-400 text-sm mt-1">{user?.role === 'CANDIDATE' ? 'Quero ser Au Pair' : user?.role === 'ALUMNI' ? 'Ex-Au Pair' : 'Au Pair'}</p>
+          <h2 className="text-slate-900 text-xl font-bold">{user?.displayName || 'Olá, Au Pair'}</h2>
+          <p className="text-slate-500 text-sm mt-1">{user?.role === 'CANDIDATE' ? 'Quero ser Au Pair' : user?.role === 'ALUMNI' ? 'Ex-Au Pair' : 'Au Pair'}</p>
           
           <div className="flex gap-3 mt-6">
-            <div className="flex-1 bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
+            <div className="flex-1 bg-white rounded-xl p-3 border border-slate-200 shadow-sm">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Plano</p>
               <div className="flex items-center justify-between">
-                <span className="text-white font-semibold text-sm">Free</span>
-                <span className="text-[9px] bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full font-bold">PRO</span>
+                <span className="text-slate-800 font-semibold text-sm">Free</span>
+                <span className="text-[9px] bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded-full font-bold">PRO</span>
               </div>
             </div>
-            <div className="flex-1 bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
+            <div className="flex-1 bg-white rounded-xl p-3 border border-slate-200 shadow-sm">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Créditos</p>
               <div className="flex items-center justify-between">
-                <span className="text-white font-semibold text-sm">5</span>
+                <span className="text-slate-800 font-semibold text-sm">5</span>
                 <button className="w-6 h-6 rounded-full bg-rose-500 flex items-center justify-center text-white"><Plus size={14} /></button>
               </div>
             </div>
@@ -184,15 +184,15 @@ export default function MainLayout() {
           <DrawerLink to="/map" icon={MapPin} label="Radar Au Pairs" />
           <DrawerLink to="/journey" icon={Info} label="Minha Jornada" />
           
-          <div className="h-px bg-slate-800 my-4 mx-2"></div>
+          <div className="h-px bg-slate-100 my-4 mx-2"></div>
           
           <DrawerLink to="/emergency" icon={Zap} label="SOS & Emergências" />
           <DrawerLink to="/search" icon={Search} label="Buscar Pessoas" />
-          <DrawerLink to="/" icon={Gift} label="Indique e Ganhe" />
+          <DrawerLink to="/referral" icon={Gift} label="Indique e Ganhe" />
           <DrawerLink to="/profile" icon={Settings} label="Configurações" />
         </div>
         
-        <div className="p-4 text-center border-t border-slate-800">
+        <div className="p-4 text-center border-t border-slate-100">
           <p className="text-slate-500 text-xs">Versão 2.1.0 Premium</p>
         </div>
       </div>

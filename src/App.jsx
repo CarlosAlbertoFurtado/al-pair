@@ -26,6 +26,7 @@ const UserProfileScreen = lazy(() => import('./features/profile/UserProfileScree
 const LegalScreen = lazy(() => import('./features/legal/LegalScreen'));
 const MapScreen = lazy(() => import('./features/map/MapScreen'));
 const LiveRoom = lazy(() => import('./features/rooms/LiveRoom'));
+const ReferralScreen = lazy(() => import('./features/profile/ReferralScreen'));
 
 export default function App() {
   const { checkAuth, isAuthenticated, isLoading } = useAuthStore();
@@ -70,6 +71,7 @@ export default function App() {
           <Route path="/emergency" element={<EmergencyScreen />} />
           <Route path="/my-posts" element={<MyPostsScreen />} />
           <Route path="/map" element={<MapScreen />} />
+          <Route path="/referral" element={<ReferralScreen />} />
           <Route path="/user/:id" element={<UserProfileScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
