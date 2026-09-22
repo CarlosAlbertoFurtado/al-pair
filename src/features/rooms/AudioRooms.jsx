@@ -80,18 +80,28 @@ function CreateRoomModal({ onClose, onCreate }) {
 }
 
 // ─── Card de sala ───────────────────────────────────────────────────────────
-function RoomCard({ room, onJoin, isJoining }) {
+function RoomCard({ room, onJoin, isJoining, onHide }) {
   const hostAvatar = resolveAssetUrl(room.host?.avatarUrl);
   const hostInitial = (room.host?.displayName || 'H')[0].toUpperCase();
   const isLive = room.status === 'LIVE';
+  const { user } = useAuthStore();
+  const isHost = user?.id === room.hostId;
 
   return (
     <div
-      className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm active:bg-slate-50 transition-colors cursor-pointer"
-      onClick={() => !isJoining && onJoin(room)}
+      className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm transition-colors relative"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
+      {!isHost && (
+        <button 
+          onClick={(e) => { e.stopPropagation(); onHide(room.id); }}
+          className="absolute top-3 right-3 p-1.5 bg-slate-50 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 z-10"
+          title="Ocultar sala fantasma"
+        >
+          <X size={14} />
+        </button>
+      )}
+      <div className="flex items-start justify-between gap-3 cursor-pointer" onClick={() => !isJoining && onJoin(room)}>
+        <div className="flex-1 min-w-0 pr-6">
           <div className="flex items-center gap-2 mb-1">
             {isLive ? (
               <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-rose-500 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
@@ -131,6 +141,7 @@ function RoomCard({ room, onJoin, isJoining }) {
             <span className="text-xs font-bold">{room.participantCount}/{room.maxParticipants}</span>
           </div>
           <button
+            onClick={(e) => { e.stopPropagation(); if(!isJoining) onJoin(room); }}
             disabled={isJoining}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black active:scale-90 transition-all ${
               isLive
@@ -152,18 +163,31 @@ export default function AudioRooms() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [joiningId, setJoiningId] = useState(null);
+  const [hiddenRoomIds, setHiddenRoomIds] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('hiddenAudioRooms')) || []; } catch { return []; }
+  });
   const { setActiveRoom } = useAudioRoomStore();
   const { user } = useAuthStore();
 
   const fetchRooms = async () => {
     try {
       const res = await roomsAPI.list();
-      setRooms(res.data.data.rooms || []);
+      let fetchedRooms = res.data.data.rooms || [];
+      // Filtra salas ocultadas localmente
+      fetchedRooms = fetchedRooms.filter(r => !hiddenRoomIds.includes(r.id));
+      setRooms(fetchedRooms);
     } catch {
       setRooms([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleHideRoom = (roomId) => {
+    const updated = [...hiddenRoomIds, roomId];
+    setHiddenRoomIds(updated);
+    localStorage.setItem('hiddenAudioRooms', JSON.stringify(updated));
+    setRooms(prev => prev.filter(r => r.id !== roomId));
   };
 
   useEffect(() => {
@@ -253,7 +277,7 @@ export default function AudioRooms() {
                 </div>
                 <div className="space-y-3">
                   {liveRooms.map(room => (
-                    <RoomCard key={room.id} room={room} onJoin={handleJoin} isJoining={joiningId === room.id} />
+                    <RoomCard key={room.id} room={room} onJoin={handleJoin} isJoining={joiningId === room.id} onHide={handleHideRoom} />
                   ))}
                 </div>
               </div>
@@ -265,7 +289,7 @@ export default function AudioRooms() {
                 <p className="text-xs font-black uppercase tracking-widest text-slate-500 mb-3">Em Breve</p>
                 <div className="space-y-3">
                   {scheduledRooms.map(room => (
-                    <RoomCard key={room.id} room={room} onJoin={handleJoin} isJoining={joiningId === room.id} />
+                    <RoomCard key={room.id} room={room} onJoin={handleJoin} isJoining={joiningId === room.id} onHide={handleHideRoom} />
                   ))}
                 </div>
               </div>
