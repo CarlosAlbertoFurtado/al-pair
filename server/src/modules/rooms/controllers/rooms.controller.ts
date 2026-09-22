@@ -77,7 +77,7 @@ export const roomsController = {
       return;
     }
 
-    // Sincroniza com LiveKit: se a sala está LIVE no banco mas não existe no servidor (Zombie), limpa.
+    // Sincroniza com LiveKit para remover salas zumbis
     if (room.status === 'LIVE' && room.startedAt) {
       const minutesSinceStart = (new Date().getTime() - room.startedAt.getTime()) / 60000;
       if (minutesSinceStart > 1) { // Só deleta se a sala foi iniciada há mais de 1 minuto
@@ -85,10 +85,27 @@ export const roomsController = {
           const { RoomServiceClient } = await import('livekit-server-sdk');
           const rClient = new RoomServiceClient(env.LIVEKIT_URL, env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET);
           const lkRooms = await rClient.listRooms([roomId]);
+          
+          let shouldDelete = false;
+          
           if (lkRooms.length === 0) {
-            // Sala fantasma! Ninguém no LiveKit, limpa do banco de dados.
+            // Ninguém no LiveKit
+            shouldDelete = true;
+          } else {
+            // A sala existe no LiveKit (LiveKit mantém salas vazias por até 5 minutos)
+            // Vamos checar se o Host está lá dentro.
+            const participants = await rClient.listParticipants(roomId);
+            const hostInRoom = participants.some(p => p.identity === room.hostId);
+            
+            // Se o host não está na sala, e quem está tentando entrar NÃO é o host, a sala é fantasma!
+            if (!hostInRoom && userId !== room.hostId) {
+              shouldDelete = true;
+            }
+          }
+
+          if (shouldDelete) {
             await prisma.room.delete({ where: { id: roomId } });
-            res.status(410).json({ success: false, message: 'Esta sala já foi encerrada (limpeza automática).' });
+            res.status(410).json({ success: false, message: 'O anfitrião encerrou ou saiu desta sala.' });
             return;
           }
         } catch (err) {
