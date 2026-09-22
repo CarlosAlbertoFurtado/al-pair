@@ -77,6 +77,26 @@ export const roomsController = {
       return;
     }
 
+    // Sincroniza com LiveKit: se a sala está LIVE no banco mas não existe no servidor (Zombie), limpa.
+    if (room.status === 'LIVE' && room.startedAt) {
+      const minutesSinceStart = (new Date().getTime() - room.startedAt.getTime()) / 60000;
+      if (minutesSinceStart > 1) { // Só deleta se a sala foi iniciada há mais de 1 minuto
+        try {
+          const { RoomServiceClient } = await import('livekit-server-sdk');
+          const rClient = new RoomServiceClient(env.LIVEKIT_URL, env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET);
+          const lkRooms = await rClient.listRooms([roomId]);
+          if (lkRooms.length === 0) {
+            // Sala fantasma! Ninguém no LiveKit, limpa do banco de dados.
+            await prisma.room.delete({ where: { id: roomId } });
+            res.status(410).json({ success: false, message: 'Esta sala já foi encerrada (limpeza automática).' });
+            return;
+          }
+        } catch (err) {
+          console.warn('Não foi possível verificar status no LiveKit, prosseguindo...', err);
+        }
+      }
+    }
+
     // Busca o nome e avatar do usuário para identificar no LiveKit
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true, avatarUrl: true } });
     const participantName = user?.displayName || 'Participante';
