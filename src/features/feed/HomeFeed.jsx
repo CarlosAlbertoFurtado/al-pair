@@ -220,6 +220,7 @@ export function PostCard({ post, onDelete }) {
               />
             </div>
           )}
+          </div>
         </div>
       )}
 
