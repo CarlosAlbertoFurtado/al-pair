@@ -172,23 +172,6 @@ export function PostCard({ post, onDelete }) {
         </div>
       </div>
 
-      {/* Rematch Badge */}
-      {post.type === 'REMATCH' && (
-        <div className={`mx-4 mb-2 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 ${
-          post.rematchUrgency === 'URGENT' ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-orange-50 text-orange-700 border border-orange-100'
-        }`}>
-          <span className="animate-pulse">🚨</span>
-          <div>
-            <span className="uppercase tracking-wider">{post.rematchUrgency === 'URGENT' ? 'Rematch Urgente' : 'Rematch (Transfer)'}</span>
-            {(post.rematchCity || post.rematchState) && (
-              <span className="font-normal opacity-80 ml-1">
-                em {post.rematchCity}{post.rematchCity && post.rematchState ? ', ' : ''}{post.rematchState}
-              </span>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Content */}
       <p className="px-4 text-sm text-slate-800 leading-relaxed mb-3">{post.content}</p>
 

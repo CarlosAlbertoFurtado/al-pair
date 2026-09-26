@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Camera, Grid, LogIn, ChevronRight, ShieldAlert, CheckSquare, Save } from 'lucide-react';
+import { Camera, Grid, LogIn, ChevronRight, ShieldAlert, CheckSquare, Save, Settings, Shield, UserCog, Globe } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
@@ -19,6 +19,7 @@ export default function Profile() {
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
   const [showPhotoViewer, setShowPhotoViewer] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -116,6 +117,7 @@ export default function Profile() {
       const res = await usersAPI.updateProfile(payload);
       updateUser(res.data.data.user);
       setNotice('Perfil atualizado com sucesso.');
+      setIsEditing(false);
     } catch (err) {
       console.error('Profile update failed:', err);
       setError(err.response?.data?.message || 'Não foi possível salvar o perfil.');
@@ -142,15 +144,14 @@ export default function Profile() {
         { icon: ShieldAlert, label: 'SOS & Emergências', desc: 'Ajuda rápida', onClick: () => navigate('/emergency') },
       ]
     },
-    /* Oculto por enquanto até MVP 2
     {
       title: 'Configurações',
       items: [
-        { icon: Settings, label: 'Configurações' },
-        { icon: Globe, label: 'Idioma' },
+        { icon: UserCog, label: 'Conta', desc: 'Gerenciar e-mail e senha', onClick: () => alert('Tela de Conta em construção para o próximo update!') },
+        { icon: Shield, label: 'Privacidade', desc: 'Quem pode ver seu perfil', onClick: () => alert('Configurações de Privacidade em construção para o próximo update!') },
+        { icon: Globe, label: 'Idioma', desc: 'Português (BR)', onClick: () => alert('Seleção de idiomas estará disponível em breve!') },
       ]
     }
-    */
   ];
 
   return (
@@ -197,6 +198,11 @@ export default function Profile() {
             <span className="inline-block mt-1 px-3 py-0.5 bg-white/20 rounded-full text-xs font-bold backdrop-blur-sm">
               {userRole === 'candidate' ? '🌍 Au Pair' : userRole === 'alumni' ? '🎓 Ex Au Pair' : '⭐ Mentora'}
             </span>
+            {(form.city || form.country) && (
+              <p className="mt-1 text-white/90 text-sm font-medium flex items-center gap-1">
+                <span className="text-lg">📍</span> {form.city}{form.city && form.country ? ', ' : ''}{form.country}
+              </p>
+            )}
             {uploadingAvatar && <p className="mt-2 text-xs font-semibold text-white/80">Validando foto...</p>}
           </div>
         </div>
@@ -218,73 +224,91 @@ export default function Profile() {
         </div>
       </div>
 
-      <form onSubmit={handleSaveProfile} className="mt-4 mx-4 bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="text-sm font-black text-slate-800">Editar perfil</h3>
-          <div className="flex items-center gap-2">
-            <label
-              htmlFor="profile-avatar-input"
-              className={`h-9 px-3 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-2 active:scale-95 transition-transform ${saving || uploadingAvatar ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
-            >
-              <Camera size={15} />
-              Foto
-            </label>
-            <button
-              type="submit"
-              disabled={saving || uploadingAvatar || !form.displayName.trim()}
-              className="h-9 px-3 rounded-xl bg-slate-900 text-white text-xs font-bold flex items-center gap-2 disabled:opacity-50"
-            >
-              <Save size={15} />
-              {saving ? 'Salvando...' : 'Salvar'}
-            </button>
+      {isEditing ? (
+        <form onSubmit={handleSaveProfile} className="mt-4 mx-4 bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-sm font-black text-slate-800">Editar perfil</h3>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsEditing(false)}
+                className="text-xs font-bold text-slate-400 hover:text-slate-600 px-2 py-1"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={saving || uploadingAvatar || !form.displayName.trim()}
+                className="h-7 px-3 rounded-xl bg-slate-900 text-white text-[10px] font-bold flex items-center gap-1 disabled:opacity-50"
+              >
+                <Save size={12} />
+                {saving ? 'Salvando' : 'Salvar'}
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div>
-          <label className="block text-xs font-bold text-slate-500 mb-1">Nome</label>
-          <input
-            value={form.displayName}
-            onChange={(event) => updateField('displayName', event.target.value)}
-            maxLength={80}
-            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-bold text-slate-500 mb-1">Bio</label>
-          <textarea
-            value={form.bio}
-            onChange={(event) => updateField('bio', event.target.value.slice(0, 300))}
-            rows={3}
-            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 resize-none"
-          />
-          <p className="mt-1 text-[11px] text-slate-400 text-right">{form.bio.length}/300</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-bold text-slate-500 mb-1">Cidade</label>
+            <label className="block text-xs font-bold text-slate-500 mb-1">Nome</label>
             <input
-              value={form.city}
-              onChange={(event) => updateField('city', event.target.value)}
+              value={form.displayName}
+              onChange={(event) => updateField('displayName', event.target.value)}
               maxLength={80}
               className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
             />
           </div>
+
           <div>
-            <label className="block text-xs font-bold text-slate-500 mb-1">País</label>
-            <input
-              value={form.country}
-              onChange={(event) => updateField('country', event.target.value)}
-              maxLength={80}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+            <label className="block text-xs font-bold text-slate-500 mb-1">Bio</label>
+            <textarea
+              value={form.bio}
+              onChange={(event) => updateField('bio', event.target.value.slice(0, 300))}
+              rows={3}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 resize-none"
             />
+            <p className="mt-1 text-[11px] text-slate-400 text-right">{form.bio.length}/300</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 mb-1">Cidade</label>
+              <input
+                value={form.city}
+                onChange={(event) => updateField('city', event.target.value)}
+                maxLength={80}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 mb-1">País</label>
+              <input
+                value={form.country}
+                onChange={(event) => updateField('country', event.target.value)}
+                maxLength={80}
+                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+              />
+            </div>
+          </div>
+
+          {notice && <p className="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">{notice}</p>}
+          {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">{error}</p>}
+        </form>
+      ) : (
+        <div className="mt-4 mx-4 bg-white rounded-2xl shadow-sm border border-slate-100 p-4 relative group">
+          <button
+            onClick={() => setIsEditing(true)}
+            className="absolute top-4 right-4 bg-slate-100 text-slate-500 hover:text-slate-800 hover:bg-slate-200 px-2 py-1 rounded-lg text-[10px] font-bold transition-colors"
+          >
+            Editar
+          </button>
+          
+          <div className="pr-16">
+            <h3 className="text-sm font-black text-slate-800 mb-1">Sobre mim</h3>
+            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
+              {form.bio || 'Adicione uma bio para que as pessoas conheçam você melhor!'}
+            </p>
           </div>
         </div>
-
-        {notice && <p className="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">{notice}</p>}
-        {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">{error}</p>}
-      </form>
+      )}
 
       {/* Menu Sections */}
       {menuSections.map((section, si) => (

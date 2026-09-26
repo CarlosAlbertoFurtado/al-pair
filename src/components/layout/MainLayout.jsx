@@ -155,30 +155,13 @@ export default function MainLayout() {
             </button>
           </div>
           <h2 className="text-slate-900 text-xl font-bold">{user?.displayName || 'Olá, Au Pair'}</h2>
-          <p className="text-slate-500 text-sm mt-1">{user?.role === 'CANDIDATE' ? 'Quero ser Au Pair' : user?.role === 'ALUMNI' ? 'Ex-Au Pair' : 'Au Pair'}</p>
-          
-          <div className="flex gap-3 mt-6">
-            <div className="flex-1 bg-white rounded-xl p-3 border border-slate-200 shadow-sm">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Plano</p>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-800 font-semibold text-sm">Free</span>
-                <span className="text-[9px] bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded-full font-bold">PRO</span>
-              </div>
-            </div>
-            <div className="flex-1 bg-white rounded-xl p-3 border border-slate-200 shadow-sm">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Créditos</p>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-800 font-semibold text-sm">5</span>
-                <button className="w-6 h-6 rounded-full bg-rose-500 flex items-center justify-center text-white"><Plus size={14} /></button>
-              </div>
-            </div>
-          </div>
+          <p className="text-slate-500 text-sm mt-1">{user?.role === 'CANDIDATE' ? 'Au Pair' : user?.role === 'ALUMNI' ? 'Ex-Au Pair' : 'Au Pair'}</p>
         </div>
 
         {/* Drawer Links */}
         <div className="flex-1 overflow-y-auto p-4 space-y-1">
           <DrawerLink to="/" icon={Home} label="Início" />
-          <DrawerLink to="/rooms" icon={Users} label="Comunidade" />
+          <DrawerLink to="/rooms" icon={Users} label="Comunidade" badge="Novo" badgeTone="green" />
           <DrawerLink to="/notifications" icon={Bell} label="Notificações" badge={unreadCount > 0 ? unreadCount : undefined} />
           <DrawerLink to="/chat" icon={MessageCircle} label="Chat" badge={unreadChatCount > 0 ? unreadChatCount : undefined} badgeTone="green" />
           <DrawerLink to="/map" icon={MapPin} label="Radar Au Pairs" />
