@@ -34,7 +34,6 @@ router.post('/:id/approve-speaker', authenticate, roomsController.approveSpeaker
 // GET /api/rooms/:id/token - Obter token LiveKit para entrar na sala de áudio
 router.get('/:id/token', authenticate, roomsController.getRoomToken);
 
-// POST /api/rooms/webhook - Receber eventos do LiveKit (sala finalizada, etc)
-router.post('/webhook', roomsController.webhook);
+
 
 export default router;

@@ -15,9 +15,22 @@ export const ASSET_BASE_URL = configuredApiUrl
   ? configuredApiUrl.replace(/\/api\/?$/, '').replace(/\/$/, '')
   : BASE_URL.replace(/\/$/, '');
 
-export function resolveAssetUrl(url) {
+export function resolveAssetUrl(url, opt = 'auto') {
   if (!url) return null;
-  return url.startsWith('http') ? url : `${ASSET_BASE_URL}${url}`;
+  let finalUrl = url.startsWith('http') ? url : `${ASSET_BASE_URL}${url}`;
+  
+  // Otimização automática para Cloudinary
+  if (finalUrl.includes('res.cloudinary.com') && finalUrl.includes('/upload/')) {
+    let transform = 'q_auto,f_auto';
+    if (opt === 'avatar') transform = 'c_thumb,w_150,h_150,g_face,q_auto,f_auto';
+    if (opt === 'thumbnail') transform = 'c_fill,w_300,q_auto,f_auto';
+    if (opt === 'post') transform = 'c_limit,w_800,q_auto,f_auto';
+    
+    // Injeta os parâmetros de transformação logo após /upload/
+    finalUrl = finalUrl.replace('/upload/', `/upload/${transform}/`);
+  }
+  
+  return finalUrl;
 }
 
 // ─── AXIOS INSTANCE ──────────────────────────────────────────
@@ -42,6 +55,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Normalização global de erros: garante que error.customMessage sempre exista
+    const customMessage = error.response?.data?.message || error.message || 'Erro de conexão com o servidor.';
+    error.customMessage = customMessage;
+
     const originalRequest = error.config;
     
     if (error.response?.status === 401 && !originalRequest._retry) {

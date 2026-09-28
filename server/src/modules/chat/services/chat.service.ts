@@ -45,6 +45,7 @@ export const chatService = {
         },
       },
       orderBy: { lastMessageAt: { sort: 'desc', nulls: 'last' } },
+      take: 50,
     });
 
     // Para cada conversa, calcular dados relativos ao viewer
