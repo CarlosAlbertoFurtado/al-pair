@@ -9,10 +9,10 @@ const HOST = window.location.hostname;
 const RENDER_BACKEND = 'https://aupairconnect-backend.onrender.com';
 const configuredApiUrl = import.meta.env.VITE_API_URL;
 export const BASE_URL = import.meta.env.VITE_WS_URL || (HOST.includes('localhost') ? `http://${HOST}:3001` : RENDER_BACKEND);
-const API_URL = configuredApiUrl || `${BASE_URL}/api`;
+const API_URL = configuredApiUrl || `${BASE_URL}/api/v1`;
 const WS_URL = BASE_URL;
 export const ASSET_BASE_URL = configuredApiUrl
-  ? configuredApiUrl.replace(/\/api\/?$/, '').replace(/\/$/, '')
+  ? configuredApiUrl.replace(/\/api\/v1\/?$/, '').replace(/\/api\/?$/, '').replace(/\/$/, '')
   : BASE_URL.replace(/\/$/, '');
 
 export function resolveAssetUrl(url, opt = 'auto') {
@@ -127,6 +127,7 @@ export const authAPI = {
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
   resetPassword: (data) => api.post('/auth/reset-password', data),
   logout: (refreshToken) => api.post('/auth/logout', { refreshToken }),
+  deleteAccount: (password) => api.delete('/auth/account', { data: { password } }),
 };
 
 export const postsAPI = {

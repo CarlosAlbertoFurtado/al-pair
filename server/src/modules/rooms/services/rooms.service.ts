@@ -223,4 +223,71 @@ export const roomsService = {
 
     return { approved: true };
   },
+
+  /**
+   * Gera um token LiveKit para o usuário entrar na sala de áudio.
+   */
+  async getRoomToken(roomId: string, userId: string) {
+    const room = await prisma.room.findUnique({ where: { id: roomId }, include: { host: { select: { displayName: true } } } });
+    if (!room) throw new NotFoundError('Sala não encontrada.');
+    if (room.status === 'ENDED') throw new ConflictError('Esta sala já foi encerrada.');
+
+    // Sincroniza com LiveKit para remover salas zumbis
+    if (room.status === 'LIVE' && room.startedAt) {
+      const minutesSinceStart = (new Date().getTime() - room.startedAt.getTime()) / 60000;
+      if (minutesSinceStart > 1) { // Só deleta se a sala foi iniciada há mais de 1 minuto
+        try {
+          const lkRooms = await roomServiceLiveKit.listRooms([roomId]);
+          let shouldDelete = false;
+          
+          if (lkRooms.length === 0) {
+            shouldDelete = true;
+          } else {
+            const participants = await roomServiceLiveKit.listParticipants(roomId);
+            const hostInRoom = participants.some(p => p.identity === room.hostId);
+            if (!hostInRoom && userId !== room.hostId) {
+              shouldDelete = true;
+            }
+          }
+
+          if (shouldDelete) {
+            await prisma.room.delete({ where: { id: roomId } });
+            throw new ConflictError('O anfitrião encerrou ou saiu desta sala.');
+          }
+        } catch (err) {
+          console.warn('Não foi possível verificar status no LiveKit, prosseguindo...', err);
+        }
+      }
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { displayName: true, avatarUrl: true } });
+    const participantName = user?.displayName || 'Participante';
+
+    const { AccessToken } = await import('livekit-server-sdk');
+    const at = new AccessToken(env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET, {
+      identity: userId,
+      name: participantName,
+      metadata: JSON.stringify({ avatarUrl: user?.avatarUrl }),
+      ttl: '1h',
+    });
+
+    const isHost = room.hostId === userId;
+    at.addGrant({
+      roomJoin: true,
+      room: roomId,
+      canPublish: isHost,
+      canSubscribe: true,
+      canPublishData: true,
+    });
+
+    const token = await at.toJwt();
+
+    return {
+      token,
+      roomId: room.id,
+      roomName: room.title,
+      livekitUrl: env.LIVEKIT_URL,
+      isHost,
+    };
+  },
 };

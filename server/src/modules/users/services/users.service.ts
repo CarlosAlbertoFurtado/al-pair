@@ -260,7 +260,12 @@ export const usersService = {
       take: limit,
     });
 
-    return users;
+    // Ofuscar coordenadas: adiciona ruído de ~2km para prevenir stalking (LGPD/GDPR)
+    return users.map(u => ({
+      ...u,
+      latitude: u.latitude ? u.latitude + (Math.random() - 0.5) * 0.036 : null,  // ~2km
+      longitude: u.longitude ? u.longitude + (Math.random() - 0.5) * 0.036 : null,
+    }));
   },
 
   /**

@@ -328,4 +328,44 @@ export const authService = {
       data: { isOnline: false, lastSeenAt: new Date() },
     });
   },
+
+  /**
+   * Exclui permanentemente a conta do usuário e TODOS os dados associados.
+   * Exigência legal obrigatória: LGPD (Brasil), GDPR (Europa), CCPA (EUA),
+   * Apple App Store Review Guideline 5.1.1(v), Google Play Policy.
+   *
+   * Requer que o usuário confirme a senha antes de executar.
+   */
+  async deleteAccount(userId: string, password: string): Promise<void> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { passwordHash: true },
+    });
+
+    if (!user) {
+      throw new UnauthorizedError('Conta não encontrada.');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      throw new UnauthorizedError('Senha incorreta. A exclusão foi cancelada.');
+    }
+
+    // Deletar todos os dados do usuário em cascata
+    // A ordem importa para evitar violação de FK
+    await prisma.$transaction([
+      prisma.refreshToken.deleteMany({ where: { userId } }),
+      prisma.passwordResetToken.deleteMany({ where: { userId } }),
+      prisma.notification.deleteMany({ where: { userId } }),
+      prisma.like.deleteMany({ where: { userId } }),
+      prisma.bookmark.deleteMany({ where: { userId } }),
+      prisma.comment.deleteMany({ where: { authorId: userId } }),
+      prisma.roomParticipant.deleteMany({ where: { userId } }),
+      prisma.conversationUser.deleteMany({ where: { userId } }),
+      prisma.message.deleteMany({ where: { senderId: userId } }),
+      prisma.post.deleteMany({ where: { authorId: userId } }),
+      prisma.room.deleteMany({ where: { hostId: userId } }),
+      prisma.user.delete({ where: { id: userId } }),
+    ]);
+  },
 };

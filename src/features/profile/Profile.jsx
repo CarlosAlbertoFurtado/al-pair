@@ -147,7 +147,7 @@ export default function Profile() {
     {
       title: 'Configurações',
       items: [
-        { icon: UserCog, label: 'Conta', desc: 'Gerenciar e-mail e senha', onClick: () => alert('Tela de Conta em construção para o próximo update!') },
+        { icon: UserCog, label: 'Conta', desc: 'Gerenciar e-mail e senha', onClick: () => navigate('/settings/account') },
         { icon: Shield, label: 'Privacidade', desc: 'Quem pode ver seu perfil', onClick: () => alert('Configurações de Privacidade em construção para o próximo update!') },
         { icon: Globe, label: 'Idioma', desc: 'Português (BR)', onClick: () => alert('Seleção de idiomas estará disponível em breve!') },
       ]

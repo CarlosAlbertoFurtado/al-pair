@@ -100,4 +100,25 @@ export const authController = {
       data: { user },
     });
   },
+
+  /**
+   * Exclui permanentemente a conta do usuário.
+   * Exige senha para confirmação de segurança.
+   */
+  async deleteAccount(req: AuthRequest, res: Response): Promise<void> {
+    const userId = req.userId!;
+    const { password } = req.body;
+
+    if (!password) {
+      res.status(400).json({ success: false, message: 'A senha é obrigatória para excluir a conta.' });
+      return;
+    }
+
+    await authService.deleteAccount(userId, password);
+
+    res.status(200).json({
+      success: true,
+      message: 'Conta excluída permanentemente.',
+    });
+  },
 };

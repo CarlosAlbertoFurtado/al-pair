@@ -39,4 +39,7 @@ router.get('/me', authenticate, authController.me);
 router.post('/forgot-password', validate(forgotPasswordSchema), authController.forgotPassword);
 router.post('/reset-password', validate(resetPasswordSchema), authController.resetPassword);
 
+// DELETE /api/auth/account - Excluir conta permanentemente (exige senha)
+router.delete('/account', authenticate, authController.deleteAccount);
+
 export default router;

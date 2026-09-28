@@ -27,6 +27,7 @@ const LegalScreen = lazy(() => import('./features/legal/LegalScreen'));
 const MapScreen = lazy(() => import('./features/map/MapScreen'));
 const LiveRoom = lazy(() => import('./features/rooms/LiveRoom'));
 const InviteScreen = lazy(() => import('./features/invite/InviteScreen'));
+const AccountSettings = lazy(() => import('./features/profile/AccountSettings'));
 
 export default function App() {
   const { checkAuth, isAuthenticated, isLoading } = useAuthStore();
@@ -72,6 +73,7 @@ export default function App() {
           <Route path="/my-posts" element={<MyPostsScreen />} />
           <Route path="/map" element={<MapScreen />} />
           <Route path="/referral" element={<InviteScreen />} />
+          <Route path="/settings/account" element={<AccountSettings />} />
           <Route path="/user/:id" element={<UserProfileScreen />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

@@ -98,20 +98,20 @@ app.use('/api/auth/register', authLimiter);
 
 // ─── Rotas da API ──────────────────────────────────────────
 
-app.use('/api/auth', authRoutes);
-app.use('/api/users', usersRoutes);
-app.use('/api/posts', postsRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/agencies', agenciesRoutes);
-app.use('/api/vault', vaultRoutes);
-app.use('/api/rooms', roomsRoutes);
-app.use('/api/upload', uploadRoutes);
-app.use('/api/notifications', notificationsRoutes);
-app.use('/api/search', searchRoutes);
-app.use('/api/journey', journeyRoutes);
-app.use('/api/emergency', emergencyRoutes);
-app.use('/api/badges', badgesRoutes);
-app.use('/api/moderation', moderationRoutes);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', usersRoutes);
+app.use('/api/v1/posts', postsRoutes);
+app.use('/api/v1/chat', chatRoutes);
+app.use('/api/v1/agencies', agenciesRoutes);
+app.use('/api/v1/vault', vaultRoutes);
+app.use('/api/v1/rooms', roomsRoutes);
+app.use('/api/v1/upload', uploadRoutes);
+app.use('/api/v1/notifications', notificationsRoutes);
+app.use('/api/v1/search', searchRoutes);
+app.use('/api/v1/journey', journeyRoutes);
+app.use('/api/v1/emergency', emergencyRoutes);
+app.use('/api/v1/badges', badgesRoutes);
+app.use('/api/v1/moderation', moderationRoutes);
 
 // Health Check
 app.get('/api/health', async (_req, res) => {
