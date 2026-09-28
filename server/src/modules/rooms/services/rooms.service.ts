@@ -16,11 +16,14 @@ export const roomsService = {
    */
   async listRooms(cursor?: string) {
     // Auto-cleanup: delete any LIVE room older than 30 minutes (stale/ghost rooms)
+    // AND delete any SCHEDULED room that was scheduled for more than 30 minutes ago but never started
     const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
     await prisma.room.deleteMany({
       where: {
-        status: 'LIVE',
-        startedAt: { lt: thirtyMinsAgo },
+        OR: [
+          { status: 'LIVE', startedAt: { lt: thirtyMinsAgo } },
+          { status: 'SCHEDULED', scheduledAt: { lt: thirtyMinsAgo } }
+        ]
       },
     }).catch(() => {});
 

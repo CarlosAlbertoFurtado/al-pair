@@ -349,7 +349,7 @@ export default function LiveRoom({ roomData, onLeave }) {
   const backgroundUrl = ROOM_BACKGROUNDS[bgIndex];
 
   return (
-    <div className={`fixed z-[90] flex flex-col ${isMinimized ? 'pointer-events-none inset-0' : 'inset-0 bg-slate-100'}`}>
+    <div className={isMinimized ? 'fixed bottom-20 left-3 right-3 z-[90] pointer-events-none' : 'fixed inset-0 z-[90] flex flex-col bg-slate-100'}>
       {/* Imagem de fundo usando <img> para evitar bloqueios de CSP */}
       {!isMinimized && (
         <>
@@ -363,7 +363,7 @@ export default function LiveRoom({ roomData, onLeave }) {
         </>
       )}
 
-      <div className="relative z-10 flex-1 flex flex-col">
+      <div className={isMinimized ? '' : 'relative z-10 flex-1 flex flex-col'}>
         <LiveKitRoom
           serverUrl={roomData.livekitUrl}
           token={roomData.token}
@@ -371,7 +371,7 @@ export default function LiveRoom({ roomData, onLeave }) {
           audio={true}
           video={false}
           onDisconnected={onLeave}
-          style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
+          style={isMinimized ? {} : { height: '100%', display: 'flex', flexDirection: 'column' }}
         >
           <RoomPanel room={roomData} onLeave={onLeave} />
         </LiveKitRoom>
