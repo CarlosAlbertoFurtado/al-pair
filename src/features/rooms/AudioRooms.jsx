@@ -20,7 +20,14 @@ function CreateRoomModal({ onClose, onCreate }) {
       const res = await roomsAPI.create({ title: title.trim(), description: description.trim() });
       onCreate(res.data.data.room);
     } catch (err) {
-      setError(err?.response?.data?.message || 'Erro ao criar sala. Tente novamente.');
+      const data = err?.response?.data;
+      // Extract Zod validation errors (they come as { errors: { field: [msgs] } })
+      if (data?.errors) {
+        const msgs = Object.values(data.errors).flat().join('. ');
+        setError(msgs || 'Verifique os campos e tente novamente.');
+      } else {
+        setError(data?.message || 'Erro ao criar sala. Tente novamente.');
+      }
     } finally {
       setLoading(false);
     }

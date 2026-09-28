@@ -1,0 +1,1 @@
+const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); prisma.room.findMany().then(r => { console.log(r); prisma.room.deleteMany().then(() => console.log('Cleaned up')).finally(() => prisma.$disconnect()); });

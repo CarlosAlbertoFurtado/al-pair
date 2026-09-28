@@ -147,6 +147,16 @@ export async function initializeChatGateway(httpServer: HttpServer): Promise<Soc
         data: { unreadCount: 0, lastReadAt: new Date() },
       });
 
+      // Mark all messages from OTHER users as READ
+      await prisma.message.updateMany({
+        where: {
+          conversationId: data.conversationId,
+          senderId: { not: userId },
+          status: { not: 'READ' },
+        },
+        data: { status: 'READ' },
+      });
+
       socket.to(`chat:${data.conversationId}`).emit('messages:read', {
         conversationId: data.conversationId,
         userId,

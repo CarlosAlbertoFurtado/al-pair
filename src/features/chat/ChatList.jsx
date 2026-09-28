@@ -43,7 +43,10 @@ function ChatConversation({ conversation, onBack, initialUnreadCount = 0, onRead
   useEffect(() => {
     chatAPI.getMessages(conversation.id)
       .then(res => {
-        const loadedMessages = res.data.data.messages || [];
+        const loadedMessages = (res.data.data.messages || []).map(msg => ({
+          ...msg,
+          isRead: msg.isRead || msg.status === 'READ',
+        }));
         setMessages(loadedMessages);
         if (initialUnreadCountRef.current > 0) {
           const unreadIncomingIds = loadedMessages
@@ -66,9 +69,9 @@ function ChatConversation({ conversation, onBack, initialUnreadCount = 0, onRead
       // Mark as read
       socket.emit('messages:read', { conversationId: conversation.id });
       
-      socket.on('message:new', (data) => {
+      const handleNewMessage = (data) => {
         if (data.conversationId === conversation.id) {
-          setMessages(prev => [...prev, data.message]);
+          setMessages(prev => [...prev, { ...data.message, isRead: data.message.isRead || data.message.status === 'READ' }]);
           const senderId = data.message?.senderId || data.message?.sender?.id;
           if (senderId !== user?.id) {
             setHighlightedUnreadIds(prev => new Set([...prev, data.message.id]));
@@ -77,24 +80,28 @@ function ChatConversation({ conversation, onBack, initialUnreadCount = 0, onRead
           socket.emit('messages:read', { conversationId: conversation.id });
           onRead?.(conversation.id);
         }
-      });
+      };
 
-      socket.on('typing:update', (data) => {
+      const handleTypingUpdate = (data) => {
         if (data.conversationId === conversation.id && data.userId !== user?.id) {
           setOtherTyping(data.isTyping);
         }
-      });
+      };
 
-      socket.on('messages:read', (data) => {
+      const handleMessagesRead = (data) => {
         if (data.conversationId === conversation.id && data.userId !== user?.id) {
-          setMessages(prev => prev.map(m => ({ ...m, isRead: true })));
+          setMessages(prev => prev.map(m => ({ ...m, isRead: true, status: 'READ' })));
         }
-      });
+      };
+
+      socket.on('message:new', handleNewMessage);
+      socket.on('typing:update', handleTypingUpdate);
+      socket.on('messages:read', handleMessagesRead);
 
       return () => {
-        socket.off('message:new');
-        socket.off('typing:update');
-        socket.off('messages:read');
+        socket.off('message:new', handleNewMessage);
+        socket.off('typing:update', handleTypingUpdate);
+        socket.off('messages:read', handleMessagesRead);
       };
     }
   }, [conversation.id, onRead, socket, user?.id, scrollToBottom]);
@@ -344,7 +351,7 @@ function ChatConversation({ conversation, onBack, initialUnreadCount = 0, onRead
                             {new Date(msg.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                           {isMine && (
-                            msg.isRead ? <CheckCheck size={12} className="text-blue-200 ml-0.5" /> : <Check size={12} className="text-white/40 ml-0.5" />
+                            (msg.isRead || msg.status === 'READ') ? <CheckCheck size={12} className="text-blue-200 ml-0.5" /> : <Check size={12} className="text-white/40 ml-0.5" />
                           )}
                         </div>
                       </div>

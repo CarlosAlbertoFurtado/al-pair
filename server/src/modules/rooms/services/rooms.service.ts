@@ -15,6 +15,15 @@ export const roomsService = {
    * IMPORTANTE: Cruza com o LiveKit para deletar salas-zumbi automaticamente.
    */
   async listRooms(cursor?: string) {
+    // Auto-cleanup: delete any LIVE room older than 4 hours (stale/ghost rooms)
+    const fourHoursAgo = new Date(Date.now() - 4 * 60 * 60 * 1000);
+    await prisma.room.deleteMany({
+      where: {
+        status: 'LIVE',
+        startedAt: { lt: fourHoursAgo },
+      },
+    }).catch(() => {});
+
     const rooms = await prisma.room.findMany({
       take: 50,
       skip: cursor ? 1 : 0,

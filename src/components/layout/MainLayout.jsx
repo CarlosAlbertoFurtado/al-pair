@@ -104,7 +104,7 @@ export default function MainLayout() {
   );
 
   return (
-    <div className="w-full max-w-[430px] mx-auto h-screen bg-white relative overflow-hidden flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.05)]">
+    <div className="w-full max-w-[430px] mx-auto min-h-screen bg-white relative flex flex-col shadow-[0_0_40px_rgba(0,0,0,0.05)]">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 bg-white/90 backdrop-blur-md border-b border-rose-100 z-30 sticky top-0">
         <div className="flex items-center gap-3">
