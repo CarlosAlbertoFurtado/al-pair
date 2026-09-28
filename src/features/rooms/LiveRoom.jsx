@@ -194,7 +194,7 @@ function RoomPanel({ room, onLeave }) {
   // Mini-player minimizado
   if (isMinimized) {
     return (
-      <div className="fixed bottom-20 left-3 right-3 bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 flex items-center gap-3 z-[100]">
+      <div className="fixed bottom-20 left-3 right-3 bg-white border border-slate-200 shadow-2xl rounded-2xl p-3 flex items-center gap-3 z-[100] pointer-events-auto">
         <RoomAudioRenderer />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1 mb-0.5">
@@ -363,7 +363,7 @@ export default function LiveRoom({ roomData, onLeave }) {
         </>
       )}
 
-      <div className={`relative z-10 flex-1 flex flex-col ${isMinimized ? 'pointer-events-auto' : ''}`}>
+      <div className="relative z-10 flex-1 flex flex-col">
         <LiveKitRoom
           serverUrl={roomData.livekitUrl}
           token={roomData.token}
