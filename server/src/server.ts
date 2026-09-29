@@ -82,7 +82,7 @@ const globalLimiter = rateLimit({
     message: 'Muitas requisições deste endereço. Aguarde 15 minutos.',
   },
 });
-app.use('/api', globalLimiter);
+app.use('/api/v1', globalLimiter);
 
 // Rate limiter específico para autenticação (mais restritivo)
 const authLimiter = rateLimit({
@@ -93,8 +93,8 @@ const authLimiter = rateLimit({
     message: 'Muitas tentativas de login. Aguarde 15 minutos.',
   },
 });
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
+app.use('/api/v1/auth/login', authLimiter);
+app.use('/api/v1/auth/register', authLimiter);
 
 // ─── Rotas da API ──────────────────────────────────────────
 
