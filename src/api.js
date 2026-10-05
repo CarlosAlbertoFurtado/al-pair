@@ -7,13 +7,10 @@ import { io } from 'socket.io-client';
 
 const HOST = window.location.hostname;
 const RENDER_BACKEND = 'https://aupairconnect-backend.onrender.com';
-const configuredApiUrl = import.meta.env.VITE_API_URL;
 export const BASE_URL = RENDER_BACKEND;
-const API_URL = configuredApiUrl || `${BASE_URL}/api/v1`;
+const API_URL = `${BASE_URL}/api/v1`;
 const WS_URL = BASE_URL;
-export const ASSET_BASE_URL = configuredApiUrl
-  ? configuredApiUrl.replace(/\/api\/v1\/?$/, '').replace(/\/api\/?$/, '').replace(/\/$/, '')
-  : BASE_URL.replace(/\/$/, '');
+export const ASSET_BASE_URL = BASE_URL.replace(/\/$/, '');
 
 export function resolveAssetUrl(url, opt = 'auto') {
   if (!url) return null;
